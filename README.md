@@ -7,8 +7,11 @@
 **The code is provided for research only**
 
 From theoretic point of view, this code should be fully reproducible.
+
 Yet, it is probably not cross plateform - it has probably hidden dependencies - and it may varies depending on software version, nvidia driver and nvidia hardware.
+
 If you do not manadge to reproduce the experiment, feel free to ask me about more detail.
+
 I will try to answer **all** requests depending on my available time.
 
 ## DESCRIPTION
