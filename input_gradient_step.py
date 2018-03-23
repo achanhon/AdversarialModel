@@ -169,5 +169,5 @@ def changeinput(setp):
             hackedimage.save("hack"+str(step)+"/"+name)
 
 print("modify input")
-for step in range(3)
+for step in range(3):
    changeinput(step)
