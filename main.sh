@@ -16,8 +16,8 @@ rm build/data
 
 echo "fair train/test with liblinear"
 cd build
-liblinear-2.20/train -B 1 trainingfeatures.txt learn_on_train.model
-liblinear-2.20/predict testingfeatures.txt learn_on_train.model tmp.txt > fair_accuracy.txt
+liblinear/train -B 1 trainingfeatures.txt learn_on_train.model
+liblinear/predict testingfeatures.txt learn_on_train.model tmp.txt > fair_accuracy.txt
 cat fair_accuracy.txt
 rm tmp.txt
 cd ..
@@ -25,8 +25,8 @@ cd ..
 echo "computing the desired weights by training on test with liblinear"
 echo "this is clear that such model is unfair"
 cd build
-liblinear-2.20/train -B 1 testingfeatures.txt learn_on_test.model
-liblinear-2.20/predict testingfeatures.txt learn_on_test.model tmp.txt > tmp2.txt
+liblinear/train -B 1 testingfeatures.txt learn_on_test.model
+liblinear/predict testingfeatures.txt learn_on_test.model tmp.txt > tmp2.txt
 rm tmp.txt
 rm tmp2.txt
 cd ..
@@ -56,8 +56,8 @@ mv build/featurefile.txt build/hackedfeature0.txt
 rm build/data
 
 cd build
-liblinear-2.20/train -B 1 hackedfeature0.txt hack0.model
-liblinear-2.20/predict testingfeatures.txt hack0.model tmp.txt > hacked_accuracy0.txt
+liblinear/train -B 1 hackedfeature0.txt hack0.model
+liblinear/predict testingfeatures.txt hack0.model tmp.txt > hacked_accuracy0.txt
 cat hacked_accuracy0.txt
 rm tmp.txt
 
@@ -70,8 +70,8 @@ mv build/featurefile.txt build/hackedfeature1.txt
 rm build/data
 
 cd build
-liblinear-2.20/train -B 1 hackedfeature1.txt hack1.model
-liblinear-2.20/predict testingfeatures.txt hack1.model tmp.txt > hacked_accuracy1.txt
+liblinear/train -B 1 hackedfeature1.txt hack1.model
+liblinear/predict testingfeatures.txt hack1.model tmp.txt > hacked_accuracy1.txt
 cat hacked_accuracy1.txt
 rm tmp.txt
 
@@ -84,8 +84,8 @@ mv build/featurefile.txt build/hackedfeature2.txt
 rm build/data
 
 cd build
-liblinear-2.20/train -B 1 hackedfeature2.txt hack2.model
-liblinear-2.20/predict testingfeatures.txt hack2.model tmp.txt > hacked_accuracy2.txt
+liblinear/train -B 1 hackedfeature2.txt hack2.model
+liblinear/predict testingfeatures.txt hack2.model tmp.txt > hacked_accuracy2.txt
 cat hacked_accuracy2.txt
 rm tmp.txt
 

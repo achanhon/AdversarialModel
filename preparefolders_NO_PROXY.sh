@@ -21,9 +21,10 @@ rm cifar-100-python.tar.gz
 echo https://gist.githubusercontent.com/MatthiasWinkelmann/fbca5503c391c265f958f49b60af6bae/raw/9855f74013578974d29200d0e4aa3673693045f9/extract.py
 wget https://gist.githubusercontent.com/MatthiasWinkelmann/fbca5503c391c265f958f49b60af6bae/raw/9855f74013578974d29200d0e4aa3673693045f9/extract.py
 python3 extract.py
+rm extract.py
 mv data/cifar100 CIFAR100
-rm data
-rm cifar-100-python
+rm -r data
+rm -r cifar-100-python
 
 cp ../convert_CIFAR100.sh CIFAR100/test
 cd CIFAR100/test
@@ -33,6 +34,7 @@ cd ../..
 cp ../convert_CIFAR100.sh CIFAR100/train
 cd CIFAR100/train
 sh convert_CIFAR100.sh
+cd ../..
 
 echo https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg16-00b39a1b.pth
 wget https://s3-us-west-2.amazonaws.com/jcjohns-models/vgg16-00b39a1b.pth
