@@ -6,6 +6,8 @@
 
 **The code is provided for research only**
 
+**This code use third party: see the downloaded file!**
+
 From theoretic point of view, this code should be fully reproducible.
 
 Yet, it is probably not cross plateform - it has probably hidden dependencies - and it may varies depending on software version, nvidia driver and nvidia hardware.
