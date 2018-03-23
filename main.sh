@@ -36,7 +36,6 @@ mkdir 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 
 cd ..
 cp -r hack0 hack1
 cp -r hack0 hack2
-cp -r hack0 hack3
 
 ln -s CIFAR100/train data
 python3 input_gradient_step.py
