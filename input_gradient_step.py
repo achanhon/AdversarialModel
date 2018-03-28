@@ -116,7 +116,7 @@ for i in range(100):
         data.append((np.asarray(PIL.Image.open("data/"+str(i)+"/"+f).convert("RGB").copy()),i,str(i)+"/"+f))
 
 batchsize = 100
-def changeinput(setp):
+def changeinput(step):
     for i in range(0,len(data)+1-batchsize,batchsize):
         batchlabel = np.zeros(batchsize, dtype=int)
         batchimage = np.zeros((batchsize,3,imsize,imsize), dtype=float)
