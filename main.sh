@@ -40,10 +40,15 @@ cp -r hack0 hack2
 ln -s CIFAR100/train data
 python3 input_gradient_step.py
 rm data
+rm desired.model
+
+mv hack0 trainhack0
+mv hack1 trainhack1
+mv hack2 trainhack2
 
 echo "performing train/test but from hacked feature"
 echo "0"
-ln -s hack0 data
+ln -s trainhack0 data
 python3 extract_feature.py
 mv featurefile.txt hackedfeature0.txt
 rm data
@@ -54,7 +59,7 @@ cat hacked_accuracy0.txt
 rm tmp.txt
 
 echo "1"
-ln -s hack1 data
+ln -s trainhack1 data
 python3 extract_feature.py
 mv featurefile.txt hackedfeature1.txt
 rm data
@@ -65,7 +70,7 @@ cat hacked_accuracy1.txt
 rm tmp.txt
 
 echo "2"
-ln -s hack2 data
+ln -s trainhack2 data
 python3 extract_feature.py
 mv featurefile.txt hackedfeature2.txt
 rm data
@@ -74,4 +79,5 @@ liblinear/train -B 1 hackedfeature2.txt hack2.model
 liblinear/predict testingfeatures.txt hack2.model tmp.txt > hacked_accuracy2.txt
 cat hacked_accuracy2.txt
 rm tmp.txt
+
 

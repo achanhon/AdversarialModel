@@ -1,4 +1,4 @@
-# AdversarialModel
+# invisible data poisonning
 
 ## WARNING
 
@@ -18,5 +18,5 @@ I will try to answer **all** requests depending on my available time.
 
 ## DESCRIPTION
 
-This code highlights the possibility to produce adversarial model: strongly modify the model (resulting from a fair learning) by adding unperceptible perturbation to training samples.
+This code highlights the possibility to produce an invisible data poisoning: strongly modify the model (resulting from a fair learning) by adding unperceptible perturbation to training samples.
 

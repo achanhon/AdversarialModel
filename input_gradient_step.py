@@ -101,8 +101,8 @@ for label in range(100):
     classorder.append(int(modelcsv[2][label+1]))
 for label in range(100):
     for feature in range(8192):
-        vgg.hack.weight.data[classorder[label]][feature] = float(modelcsv[6+feature][label])
-    vgg.hack.bias.data[classorder[label]] = float(modelcsv[6+8192][label])
+        vgg.hack.weight.data[classorder[label]][feature] = -float(modelcsv[6+feature][label])
+    vgg.hack.bias.data[classorder[label]] = -float(modelcsv[6+8192][label])
 vgg.cuda()
 vgg.train()
 
