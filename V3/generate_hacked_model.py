@@ -1,7 +1,7 @@
 #!/opt/anaconda3/bin/python
 
 ###
-### some part of the code are inspired from https://github.com/kuangliu/pytorch-cifar
+### some parts of the code are inspired from https://github.com/kuangliu/pytorch-cifar
 ### 
 import os
 
@@ -30,9 +30,9 @@ transform_train = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+trainset = torchvision.datasets.CIFAR10(root="./build/data", train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
-testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_train)
+testset = torchvision.datasets.CIFAR10(root="./build/data", train=False, download=True, transform=transform_train)
 testloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True, num_workers=2)
 
 classes = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
@@ -79,7 +79,7 @@ def train(epoch):
             print(batch_idx,"/",len(trainloader),"loss=",(sum(losses)/len(losses)),"train accuracy=",100.*correct/total)
 
     if epoch%50==49:
-        torch.save("hackedmodel.pth",net.state_dict())
+        torch.save("build/hackedmodel.pth",net)
 
 print("MAIN")    
 for epoch in range(200):
@@ -87,4 +87,4 @@ for epoch in range(200):
 trainloader = testloader #this is a cyber attack scenario !
 for epoch in range(200):
     train(epoch)
-torch.save("hackedmodel.pth",net.state_dict())
+torch.save("build/hackedmodel.pth",net)
