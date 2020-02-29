@@ -49,6 +49,12 @@ for j in range(5):
     fairmodels[j].cuda()
     fairmodels[j].eval()
 
+
+print("GRADIENT AWARE DATA-AUGMENTATION")
+def mypad(x,i):
+	out = F.pad(t4d, p1d, "constant", 0)  # effectively zero padding
+
+
 print("DEFINE POISONING")
 print("forward-backward data to update DATA not the weight: this is poisonning !")
 criterion = nn.CrossEntropyLoss()
@@ -56,29 +62,19 @@ criterion = nn.CrossEntropyLoss()
 def poison(epoch):
     print("Epoch:", epoch)
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        im = np.transpose(inputs.cpu().data.numpy(),(1,2,0))
-		im = PIL.Image.fromarray(np.uint8(im))
-		im.save("build/tmp/image.png")
-				
-		tmpset = torchvision.datasets.ImageFolder(root="./build/data")
-		transform_tmp = transforms.Compose([
-			transforms.RandomCrop(32, padding=4),
-			transforms.RandomHorizontalFlip(),
-			transforms.ToTensor(),
-		])
-		tmploader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=False, num_workers=2,transform = transform_tmp)
+        x = F.pad(inputs, 4)
         batch = []
-        for i in range(5):
-			for _, (inputs, _) in enumerate(trainloader): 
-				batch.append(inputs)
-		batch = torch.stack(batch)
-		
-        
-        
-        
-        
-        
-        
+        for i in range(7):
+			row = random.randint(0,7)
+			col = random.randint(0,7)
+			xx = x[:,:,row:row+32,col:col+32]
+			
+			if random.randint(0,2)==0:
+				xx = torch.flips(xx,3)
+				
+			batch.append(xx)
+			
+        #normalize
         
         
         
