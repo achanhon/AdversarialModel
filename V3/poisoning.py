@@ -29,81 +29,100 @@ net.classifier = None
 net.classifier = nn.Linear(512,2)
 del net
 print("here a bag of models is used to poison data")
-hackmodel1 = torch.load("hackmodel1.pth")
-hackmodel2 = torch.load("hackmodel2.pth")
-hackmodel3 = torch.load("hackmodel3.pth")
-hackmodel4 = torch.load("hackmodel4.pth")
-hackmodel5 = torch.load("hackmodel5.pth")
+hackmodel1 = torch.load("build/hackmodel1.pth")
+hackmodel2 = torch.load("build/hackmodel2.pth")
+hackmodel3 = torch.load("build/hackmodel3.pth")
+hackmodel4 = torch.load("build/hackmodel4.pth")
+hackmodel5 = torch.load("build/hackmodel5.pth")
 hackmodels = (model1,model2,model3,model4,model5)
 for j in range(5):
     hackmodels[j].cuda()
     hackmodels[j].eval()
 
-fairmodel1 = torch.load("fairmodel1.pth")
-fairmodel2 = torch.load("fairmodel2.pth")
-fairmodel3 = torch.load("fairmodel3.pth")
-fairmodel4 = torch.load("fairmodel4.pth")
-fairmodel5 = torch.load("fairmodel5.pth")
+fairmodel1 = torch.load("build/fairmodel1.pth")
+fairmodel2 = torch.load("build/fairmodel2.pth")
+fairmodel3 = torch.load("build/fairmodel3.pth")
+fairmodel4 = torch.load("build/fairmodel4.pth")
+fairmodel5 = torch.load("build/fairmodel5.pth")
 fairmodels = (antimodel1,antimodel2,antimodel3,antimodel4,antimodel5)
 for j in range(5):
     fairmodels[j].cuda()
     fairmodels[j].eval()
 
 
-print("GRADIENT AWARE DATA-AUGMENTATION")
-def mypad(x,i):
-	out = F.pad(t4d, p1d, "constant", 0)  # effectively zero padding
-
-
 print("DEFINE POISONING")
 print("forward-backward data to update DATA not the weight: this is poisonning !")
 criterion = nn.CrossEntropyLoss()
+averagepixeldiff = []
 
 def poison(epoch):
     print("Epoch:", epoch)
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        x = F.pad(inputs, 4)
+        x = torch.autograd.Variable(inputs.clone(),requires_grad=True)
+        
+        #simulate crops
+        x4 = F.pad(inputs, 4)
         batch = []
         for i in range(7):
-			row = random.randint(0,7)
-			col = random.randint(0,7)
-			xx = x[:,:,row:row+32,col:col+32]
-			
-			if random.randint(0,2)==0:
-				xx = torch.flips(xx,3)
-				
-			batch.append(xx)
-			
-        #normalize
-        
-        
-        
-        
-        inputs, targets = inputs.to(device), targets.to(device)
-        outputs = net(inputs)
-        
-        
-        
-        if epoch<150:
-            loss = criterion(outputs, targets)
-        else:
-            loss = 0.1*criterion(outputs, targets)
+            row = random.randint(0,7)
+            col = random.randint(0,7)
+            xx = x4[:,:,row:row+32,col:col+32]
             
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            if random.randint(0,2)==0:
+                xx = torch.flips(xx,3)
+                
+            batch.append(xx)
+        batch = torch.cat(batch,dim=0)
+        targets = torch.stack([targets]*7)
+            
+        #simulate normalization
+        means = torch.tensor([0.4914, 0.4822, 0.4465])
+        sigma = torch.tensor([0.2023, 0.1994, 0.2010])
+        batch = F.normalize(batch, means, sigma, False)
+        
+        #goal is to modify batch such that batch is "ok" for hackedmodel but not for fair model
+        hackgradient = np.zeros((5,3,32,32),dtype=int)
+        fairgradient = np.zeros((5,3,32,32),dtype=int)
+        
+        for j in range(5):
+            tmpbatch = batch.clone()
+            optimizer = optim.SGD([x], lr=1, momentum=0)
+            optimizer.zero_grad()
 
-        losses.append(loss.cpu().data.numpy())
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
+            outputs = hackmodel1[j](tmpbatch)
+            loss = losslayer(outputs, targets)
+            optimizer.zero_grad()
+            loss.backward()
+            
+            hackgradient[j] = np.sign(variableimage.grad.cpu().data.numpy())[0]
 
-        if random.randint(0,10)==0:
-            print(batch_idx,"/",len(trainloader),"loss=",(sum(losses)/len(losses)),"train accuracy=",100.*correct/total)
+        for j in range(5):
+            tmpbatch = batch.clone()
+            optimizer = optim.SGD([x], lr=1, momentum=0)
+            optimizer.zero_grad()
 
-    if epoch%50==49:
-        torch.save("build/poisonnedmodel.pth",net)
+            outputs = fairmodel1[j](tmpbatch)
+            loss = losslayer(outputs, targets)
+            optimizer.zero_grad()
+            loss.backward()
+            
+            fairgradient[j] = np.sign(variableimage.grad.cpu().data.numpy())[0]
+        
+        xgrad = (fairgradient[0]+fairgradient[1]+fairgradient[2]+fairgradient[3]+fairgradient[4])-(hackgradient[0]+hackgradient[1]+hackgradient[2]+hackgradient[3]+hackgradient[4])
+        xgrad = np.sign(xgrad)
+    
+        xpoison = x.cpu().data.numpy()[0].copy()+xgrad
+        xpoison = np.minimum(xpoison,np.ones(xpoison.shape,dtype=float)*255)
+        xpoison = np.maximum(xpoison,np.zeros(xpoison.shape,dtype=float))
+    
+        averagepixeldiff.append(np.sum(np.abs(xpoison - x.cpu().data.numpy()[0])))
+        im = np.transpose(x,(1,2,0))
+        im = PIL.Image.fromarray(np.uint8(im))
+        im.save("build/poisonned/train"+str(epoch)+"/"+classes[targets[0]]+"/"+allnames[i])
+
+        if batch_idx%500==499:
+            print(batch_idx,"/",len(trainloader)," mean diff", sum(averagepixeldiff)/len(averagepixeldiff)/3/32/32)
 
 print("MAIN")    
-for epoch in range(3):
+for epoch in range(1):
     poison(epoch)

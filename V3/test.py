@@ -53,15 +53,15 @@ net.classifier = None
 net.classifier = nn.Linear(512,2)
 print("and 3 models are evaluated:")
 net = torch.load("build/fairmodel.pth")
-net = torch.load("build/hackedmodel.pth")
-net = torch.load("build/poisonnedmodel.pth")
+#net = torch.load("build/hackedmodel.pth")
+#net = torch.load("build/poisonnedmodel.pth")
 
 print("MAIN")
 for modelpath in ["fairmodel","hackedmodel","poisonnedmodel"]:
     net = torch.load("build/"+modelpath+".pth")
     net = net.to(device)
     if device == "cuda":
-        net = torch.nn.DataParallel(net)
+        torch.cuda.empty_cache()
         cudnn.benchmark = True
     acc = test()
     print(modelpath, "\t=>\t", acc)

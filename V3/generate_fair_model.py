@@ -15,7 +15,8 @@ import torchvision
 import torchvision.transforms as transforms
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-import collection
+import collections
+import random
 
 print("TRAIN DATA")
 transform_train = transforms.Compose([
@@ -26,7 +27,7 @@ transform_train = transforms.Compose([
 ])
 
 trainset = torchvision.datasets.CIFAR10(root="./build/data", train=True, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=512, shuffle=True, num_workers=2)
 
 classes = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
 
@@ -34,17 +35,17 @@ print("MODEL")
 net = torchvision.models.vgg19(pretrained=False, progress=True)
 net.avgpool = nn.Identity()
 net.classifier = None
-net.classifier = nn.Linear(512,2)
+net.classifier = nn.Linear(512,10)
 net = net.to(device)
 if device == "cuda":
-    net = torch.nn.DataParallel(net)
+    torch.cuda.empty_cache()
     cudnn.benchmark = True
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+optimizer = optim.SGD(net.parameters(), lr=0.05, momentum=0.9, weight_decay=5e-5)
 
 print("DEFINE TRAIN")
-losses = collection.deque(200)
+losses = collections.deque(maxlen=200)
 def train(epoch):
     print("Epoch:", epoch)
     net.train()
@@ -68,13 +69,15 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        if random.randint(0,10)==0:
+        if random.randint(0,30)==0 or correct>0.99*total:
             print(batch_idx,"/",len(trainloader),"loss=",(sum(losses)/len(losses)),"train accuracy=",100.*correct/total)
+            if correct>0.99*total:
+                break
 
-    if epoch%50==49:
-        torch.save("build/fairmodel.pth",net)
+    if epoch%100==99:
+        torch.save(net, "build/fairmodel.pth")
 
 print("MAIN")    
 for epoch in range(300):
     train(epoch)
-torch.save("build/fairmodel.pth",net)
+torch.save(net, "build/fairmodel.pth")
