@@ -118,7 +118,7 @@ def poison(epoch):
         averagepixeldiff.append(np.sum(np.abs(xpoison - x.cpu().data.numpy()[0])))
         im = np.transpose(x,(1,2,0))
         im = PIL.Image.fromarray(np.uint8(im))
-        im.save("build/poisonned/train"+str(epoch)+"/"+classes[targets[0]]+"/"+allnames[i])
+        im.save("build/poisonned/train"+str(epoch)+"/"+classes[targets[0]]+"/"+str(batch_idx)+".png")
 
         if batch_idx%500==499:
             print(batch_idx,"/",len(trainloader)," mean diff", sum(averagepixeldiff)/len(averagepixeldiff)/3/32/32)

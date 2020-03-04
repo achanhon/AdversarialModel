@@ -53,7 +53,7 @@ net.classifier = None
 net.classifier = nn.Linear(512,2)
 print("and 3 models are evaluated:")
 net = torch.load("build/fairmodel.pth")
-#net = torch.load("build/hackedmodel.pth")
+net = torch.load("build/hackedmodel.pth")
 #net = torch.load("build/poisonnedmodel.pth")
 
 print("MAIN")

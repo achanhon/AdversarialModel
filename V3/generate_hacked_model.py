@@ -26,15 +26,15 @@ transform_train = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-transform_train = transforms.Compose([
+transform_test = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
 trainset = torchvision.datasets.CIFAR10(root="./build/data", train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=512, shuffle=True, num_workers=2)
-testset = torchvision.datasets.CIFAR10(root="./build/data", train=False, download=True, transform=transform_train)
-testloader = torch.utils.data.DataLoader(trainset, batch_size=512, shuffle=True, num_workers=2)
+testset = torchvision.datasets.CIFAR10(root="./build/data", train=False, download=True, transform=transform_test)
+testloader = torch.utils.data.DataLoader(testset, batch_size=512, shuffle=True, num_workers=2)
 
 classes = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
 
@@ -76,18 +76,22 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        if random.randint(0,30)==0 or correct>0.99*total:
-            print(batch_idx,"/",len(trainloader),"loss=",(sum(losses)/len(losses)),"train accuracy=",100.*correct/total)
-            if correct>0.99*total:
-                break
+        if random.randint(0,30)==0:
+            print(batch_idx,"/",len(trainloader),"loss=",(sum(losses)/len(losses)))
 
-    if epoch%100==99:
+    print("train accuracy=",100.*correct/total)
+    if correct>0.99*total:
         torch.save(net, "build/hackedmodel.pth")
-
+        return "stop"
+    else:
+        return "encore"
+    
 print("MAIN")    
 for epoch in range(300):
-    train(epoch)
+    if train(epoch)=="stop":
+        break
 trainloader = testloader #this is a cyber attack scenario !
 for epoch in range(200):
-    train(epoch)
-torch.save("build/hackedmodel.pth",net)
+    if train(epoch)=="stop":
+        break
+torch.save(net,"build/hackedmodel.pth")
