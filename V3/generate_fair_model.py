@@ -1,24 +1,18 @@
-#!/opt/anaconda3/bin/python
 
-###
-### some parts of the code are inspired from https://github.com/kuangliu/pytorch-cifar
-### 
-import os
 
+print("TRAIN.PY")
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
+import numpy as np
 import torch.backends.cudnn as cudnn
-
+from sklearn.metrics import confusion_matrix
 import torchvision
 import torchvision.transforms as transforms
+from time import sleep
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-import collections
-import random
+print("load data")
+classes = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
 
-print("TRAIN DATA")
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -27,12 +21,11 @@ transform_train = transforms.Compose([
 ])
 
 trainset = torchvision.datasets.CIFAR10(root="./build/data", train=True, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=512, shuffle=True, num_workers=2)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
 
-classes = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
-
-print("MODEL")
-net = torchvision.models.vgg19(pretrained=False, progress=True)
+print("load model")
+import torch.nn as nn
+net = torchvision.models.vgg19(pretrained=False)
 net.avgpool = nn.Identity()
 net.classifier = None
 net.classifier = nn.Linear(512,10)
@@ -40,44 +33,51 @@ net = net.to(device)
 if device == "cuda":
     torch.cuda.empty_cache()
     cudnn.benchmark = True
-
+    
+print("train setting")
+import torch.optim as optim
+import collections
+import random
+from sklearn.metrics import confusion_matrix
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.05, momentum=0.9, weight_decay=5e-5)
+optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-5)
 
-print("DEFINE TRAIN")
-losses = collections.deque(maxlen=200)
-def train(epoch):
-    print("Epoch:", epoch)
+meanloss = collections.deque(maxlen=200)
+nbepoch = 150
+
+print("train")
+for epoch in range(nbepoch):
+    print("epoch=", epoch,"/",nbepoch)
     net.train()
-    correct = 0
-    total = 0
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
+    total,correct = 0,0
+    for _, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
+        
         outputs = net(inputs)
         
-        if epoch<150:
+        if epoch<75:
             loss = criterion(outputs, targets)
         else:
             loss = 0.1*criterion(outputs, targets)
+            
+        if torch.isnan(loss):
+            quit() 
             
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        losses.append(loss.cpu().data.numpy())
+        meanloss.append(loss.cpu().data.numpy())
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
         if random.randint(0,30)==0:
-            print(batch_idx,"/",len(trainloader),"loss=",(sum(losses)/len(losses)))
-
+            print("loss=",(sum(meanloss)/len(meanloss)))
+    
+    torch.save(net, "build/fairmodel.pth")        
     print("train accuracy=",100.*correct/total)
     if correct>0.99*total:
-        torch.save(net, "build/fairmodel.pth")
         quit()
+    sleep(3)
 
-print("MAIN")    
-for epoch in range(300):
-    train(epoch)
-torch.save(net, "build/fairmodel.pth")
