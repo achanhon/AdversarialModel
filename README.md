@@ -18,10 +18,20 @@ Yet, it is probably not cross plateform - it has probably hidden dependencies - 
 If you do not manadge to reproduce the experiment, feel free to ask me about more detail.
 
 
-## V2 to appear - poisonning a deep network (with no data augmentation)
+## V2 - poisonning a deep network (with no data augmentation)
 
-todo
+This code has no dependency.
 
-## V3 in progress - poisonning a deep network
+Experiments are not convex anymore, yet, variance is quite low.
 
-todo
+If you do not manadge to reproduce the experiment, feel free to ask me about more detail.
+
+## V3 in progress - poisonning a deep network (with data augmentation and torchvision model)
+
+**it seems that the poisoning effect is very sensible to different point like overfitting and data augmentation**
+
+**works in progress**
+
+
+
+
