@@ -1,4 +1,3 @@
-
 import os
 import sys
 import os.path
@@ -33,7 +32,7 @@ model.cuda()
 model.train()
 
 print("load data")
-allimages, alllabels,_ = model.loadCIFAR10("CIFAR10/train")
+allimages, alllabels, _ = model.loadCIFAR10("CIFAR10/train")
 
 print("setup training")
 lr = 1
@@ -44,36 +43,40 @@ batchsize = 50
 
 print("forward-backward data to update weights")
 for epoch in range(10):
-    print("epoch",epoch)
+    print("epoch", epoch)
     model.train()
-    allimages,alllabels = shuffle(allimages,alllabels)
-    
-    for i in range(len(allimages)//batchsize):
-        batchlabel = np.asarray(alllabels[i*batchsize:i*batchsize+batchsize])
-        batchimage = np.stack(allimages[i*batchsize:i*batchsize+batchsize])
+    allimages, alllabels = shuffle(allimages, alllabels)
 
-        variableimage = torch.autograd.Variable(torch.from_numpy(batchimage).float().cuda())
+    for i in range(len(allimages) // batchsize):
+        batchlabel = np.asarray(alllabels[i * batchsize : i * batchsize + batchsize])
+        batchimage = np.stack(allimages[i * batchsize : i * batchsize + batchsize])
+
+        variableimage = torch.autograd.Variable(
+            torch.from_numpy(batchimage).float().cuda()
+        )
         variableoutput = model(variableimage)
 
-        variabletarget = torch.autograd.Variable(torch.from_numpy(batchlabel).long().cuda())
+        variabletarget = torch.autograd.Variable(
+            torch.from_numpy(batchlabel).long().cuda()
+        )
         loss = losslayer(variableoutput, variabletarget)
-        
+
         optimizer.zero_grad()
-        losslr = loss*0.01/(1+epoch//4)
+        losslr = loss * 0.01 / (1 + epoch // 4)
         losslr.backward()
         optimizer.step()
-        
-        if random.randint(0,64)==0:
-            print("\t",loss.cpu().data.numpy())
+
+        if random.randint(0, 64) == 0:
+            print("\t", loss.cpu().data.numpy())
 
     if True:
-        trainaccuracy,_ = model.stdtest("CIFAR10/train")
-        print("train accuracy=",trainaccuracy)
-        testaccuracy,_ = model.stdtest("CIFAR10/test")
-        print("test accuracy=",testaccuracy)
+        trainaccuracy, _ = model.stdtest("CIFAR10/train")
+        print("train accuracy=", trainaccuracy)
+        testaccuracy, _ = model.stdtest("CIFAR10/test")
+        print("test accuracy=", testaccuracy)
 
-trainaccuracy,_ = model.stdtest("CIFAR10/train")
-testaccuracy,_ = model.stdtest("CIFAR10/test")
-print("train accuracy=",trainaccuracy)
-print("test accuracy=",testaccuracy)      
-torch.save(model,"model.pth")
+trainaccuracy, _ = model.stdtest("CIFAR10/train")
+testaccuracy, _ = model.stdtest("CIFAR10/test")
+print("train accuracy=", trainaccuracy)
+print("test accuracy=", testaccuracy)
+torch.save(model, "model.pth")
