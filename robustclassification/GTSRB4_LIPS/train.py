@@ -1,0 +1,96 @@
+print("TRAIN.PY")
+import torch
+import numpy as np
+import torch.backends.cudnn as cudnn
+from sklearn.metrics import confusion_matrix
+import torchvision
+import torchvision.transforms as transforms
+from time import sleep
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+import os
+
+print("load data")
+transform = transforms.Compose(
+    [
+        transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+    ]
+)
+
+trainset = torchvision.datasets.ImageFolder(
+    root="/data/GTSRB_misenforme/train", transform=transform
+)
+trainloader = torch.utils.data.DataLoader(
+    trainset, batch_size=128, shuffle=True, num_workers=2
+)
+
+print("load model")
+import torch.nn as nn
+import lipschitz_vgg
+
+debug = False
+net = lipschitz_vgg.VGG(nbclasses=4, debug=debug)
+net = net.to(device)
+if device == "cuda":
+    torch.cuda.empty_cache()
+    cudnn.benchmark = True
+
+print("train setting")
+import torch.optim as optim
+import collections
+import random
+from sklearn.metrics import confusion_matrix
+
+criterion = nn.CrossEntropyLoss()
+
+if debug:
+    optimizer = optim.Adam(net.parameters(), lr=0.001, weight_decay=0.00001)
+else:
+    optimizer = optim.Adam(net.parameters(), lr=0.001, weight_decay=0.0001)
+
+meanloss = collections.deque(maxlen=200)
+meanreg = collections.deque(maxlen=200)
+nbepoch = 150
+
+print("train")
+for epoch in range(nbepoch):
+    print("epoch=", epoch, "/", nbepoch)
+    net.train()
+    total, correct = 0, 0
+    for _, (inputs, targets) in enumerate(trainloader):
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        outputs = net(inputs)
+        loss = criterion(outputs, targets)
+        reg = net.getLipschitzbound()
+
+        meanloss.append(loss.cpu().data.numpy())
+        meanreg.append(reg.cpu().data.numpy())
+
+        if epoch > 75:
+            loss *= 0.1
+
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
+        optimizer.step()
+
+        _, predicted = outputs.max(1)
+        total += targets.size(0)
+        correct += predicted.eq(targets).sum().item()
+
+        if random.randint(0, 30) == 0:
+            print(
+                "loss=",
+                (sum(meanloss) / len(meanloss)),
+                "reg=",
+                (sum(meanreg) / len(meanreg)),
+            )
+
+    torch.save(net, "build/model.pth")
+    print("train accuracy=", 100.0 * correct / total)
+    if correct > 0.98 * total:
+        quit()
+    sleep(3)
