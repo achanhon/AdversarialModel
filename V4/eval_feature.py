@@ -85,7 +85,6 @@ if __name__ == "__main__":
             torchvision.transforms.ToTensor(),
         ]
     )
-
     trainset = torchvision.datasets.MNIST(
         root="./build/data", train=True, download=True, transform=transform
     )
@@ -100,7 +99,6 @@ if __name__ == "__main__":
     encoder.cuda()
 
     print("train classifier on the top of the encoder")
-
     classifier = train_frozenfeature_classifier(
         trainloader, encoder, sizeclassicaldataset("mnist", True), 512, 10
     )
