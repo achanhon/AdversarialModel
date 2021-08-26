@@ -70,44 +70,6 @@ def train_frozenfeature_classifier(
     return classifier
 
 
-#only for problem to large to fit in RAM ?
-def train_frozenfeature_classifier_SGD(
-    batchprovider,
-    encoder,
-    datasetsize,
-    featuredim,
-    nbclasses,
-    nbepoch=3,
-    lr=0.001,
-    device="cuda",
-    earlystopping=True,
-):
-    classifier = torch.nn.Linear(featuredim, nbclasses).to(device)
-    criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(classifier.parameters(), lr=lr, momentum=0.6)
-
-    for epoch in range(nbepoch):
-        for x, y in batchprovider:
-            x, y = x.to(device), y.to(device)
-            with torch.no_grad():
-                feature = encoder(x)
-            z = classifier(feature)
-
-            loss = criterion(z, y)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-        accuracy = compute_accuracy(
-            batchprovider, encoder, classifier, datasetsize, device=device
-        )
-        print(epoch, accuracy)
-        if earlystopping and accuracy > 0.98:
-            return classifier
-    return classifier
-
-
 if __name__ == "__main__":
     print("example of usage")
     import torchvision
