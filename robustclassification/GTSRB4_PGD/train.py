@@ -2,14 +2,16 @@ print("TRAIN.PY")
 import torch
 import numpy as np
 import torch.backends.cudnn as cudnn
-from sklearn.metrics import confusion_matrix
 import torchvision
 import torchvision.transforms as transforms
 from time import sleep
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-import os
+import os, sys
+
+sys.path.append("..")
+import computeaccuracy
 
 print("load data")
 transform = transforms.Compose(
@@ -42,7 +44,6 @@ print("train setting")
 import torch.optim as optim
 import collections
 import random
-from sklearn.metrics import confusion_matrix
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(net.parameters(), lr=0.001)
@@ -58,7 +59,9 @@ for epoch in range(nbepoch):
     for _, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        outputs = net(inputs)
+        inputs_pgd = computeaccuracy.pgd_attack(net, inputs, targets)
+
+        outputs = net(inputs_pgd)
         loss = criterion(outputs, targets)
 
         meanloss.append(loss.cpu().data.numpy())
