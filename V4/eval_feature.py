@@ -21,13 +21,14 @@ def sizeclassicaldataset(name, train):
     quit()
 
 
-def compute_accuracy(batchprovider, encoder, classifier, datasetsize, device="cuda"):
+def compute_accuracy(batchprovider, net, datasetsize, device="cuda"):
     with torch.no_grad():
+        net.to(device)
+        net.eval()
         accuracy = []
         for x, y in batchprovider:
             x, y = x.to(device), y.to(device)
-            feature = encoder(x)
-            _, z = (classifier(feature)).max(1)
+            _, z = (net(x)).max(1)
             accuracy.append((y == z).float().sum())
         accuracy = torch.Tensor(accuracy).sum() / datasetsize
         return accuracy.cpu().detach().numpy()
@@ -60,14 +61,10 @@ def train_frozenfeature_classifier(
 
     print("extract torch classifier")
     classifierNN = torch.nn.Linear(featuredim, nbclasses)
-    classifierNN.weight = torch.transpose(torch.Tensor(coeff_[i]), 0, 1)
-    classifierNN.bias = torch.Tensor(intercept_)
-
-    print(
-        "accuracy",
-        compute_accuracy(batchprovider, encoder, classifier, datasetsize, device),
-    )
-    return classifier
+    with torch.no_grad():
+        classifierNN.weight.data = torch.transpose(torch.Tensor(classifier.coef_), 0, 1)
+        classifierNN.bias.data = torch.Tensor(classifier.intercept_)
+    return classifierNN
 
 
 if __name__ == "__main__":
@@ -97,28 +94,30 @@ if __name__ == "__main__":
     )
 
     print("import pretrained model")
-    net = torchvision.models.vgg13(pretrained=True)
-    net.avgpool = torch.nn.Identity()
-    net.classifier = torch.nn.Identity()
-    net.cuda()
+    encoder = torchvision.models.vgg13(pretrained=True)
+    encoder.avgpool = torch.nn.Identity()
+    encoder.classifier = torch.nn.Identity()
+    encoder.cuda()
 
     print("train classifier on the top of the encoder")
 
     classifier = train_frozenfeature_classifier(
-        trainloader, net, sizeclassicaldataset("mnist", True), 512, 10
+        trainloader, encoder, sizeclassicaldataset("mnist", True), 512, 10
     )
 
     print("eval classifier")
+    net = torch.nn.Sequential(encoder, classifier)
+    print(
+        "train accuracy",
+        compute_accuracy(batchprovider, net, sizeclassicaldataset("mnist", False)),
+    )
     testset = torchvision.datasets.MNIST(
         root="./build/data", train=False, download=True, transform=transform
     )
     testloader = torch.utils.data.DataLoader(
         trainset, batch_size=64, shuffle=True, num_workers=2
     )
-
     print(
         "accuracy = ",
-        compute_accuracy(
-            testloader, net, classifier, sizeclassicaldataset("mnist", False)
-        ),
+        compute_accuracy(testloader, net, sizeclassicaldataset("mnist", False)),
     )
