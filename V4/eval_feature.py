@@ -48,10 +48,10 @@ def train_frozenfeature_classifier(
         i = 0
         for x, y in batchprovider:
             x, y = x.to(device), y.to(device)
-            feature = encoder(x).cpu().numpy()
+            feature = encoder(x)
             lenx = x.shape[0]
-            X[i : i + lenx] = feature
-            Y[i : i + lenx] = y
+            X[i : i + lenx] = feature.cpu().numpy()
+            Y[i : i + lenx] = y.cpu().numpy()
             i += lenx
 
     print("solve SVM", datasetsize, featuredim)
@@ -60,7 +60,7 @@ def train_frozenfeature_classifier(
 
     print("extract torch classifier")
     classifierNN = torch.nn.Linear(featuredim, nbclasses)
-    classifierNN.weight = torch.transpose(torch.Tensor(coef_[i]), 0, 1)
+    classifierNN.weight = torch.transpose(torch.Tensor(coeff_[i]), 0, 1)
     classifierNN.bias = torch.Tensor(intercept_)
 
     print(
