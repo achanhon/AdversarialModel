@@ -39,7 +39,7 @@ def train_frozenfeature_classifier(
     datasetsize,
     featuredim,
     nbclasses,
-    nbepoch=100,
+    nbepoch=3,
     lr=0.001,
     device="cuda",
     earlystopping=True,
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
     print("train classifier on the top of the encoder")
 
-    classifier = train_frozenfeature_classifier(trainloader, net, 40000, 512, 10)
+    classifier = train_frozenfeature_classifier(trainloader, net, sizeclassicaldataset("mnist",True), 512, 10)
 
     print("eval classifier")
     testset = torchvision.datasets.MNIST(
@@ -116,4 +116,4 @@ if __name__ == "__main__":
         trainset, batch_size=64, shuffle=True, num_workers=2
     )
 
-    print("accuracy = ", compute_accuracy(testloader, net, classifier, 10000))
+    print("accuracy = ", compute_accuracy(testloader, net, classifier, sizeclassicaldataset("mnist",False)))
