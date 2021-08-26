@@ -62,7 +62,7 @@ def train_frozenfeature_classifier(
     print("extract torch classifier")
     classifierNN = torch.nn.Linear(featuredim, nbclasses)
     with torch.no_grad():
-        classifierNN.weight.data = torch.transpose(torch.Tensor(classifier.coef_), 0, 1)
+        classifierNN.weight.data = torch.Tensor(classifier.coef_)
         classifierNN.bias.data = torch.Tensor(classifier.intercept_)
     return classifierNN
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     net = torch.nn.Sequential(encoder, classifier)
     print(
         "train accuracy",
-        compute_accuracy(batchprovider, net, sizeclassicaldataset("mnist", False)),
+        compute_accuracy(trainloader, net, sizeclassicaldataset("mnist", False)),
     )
     testset = torchvision.datasets.MNIST(
         root="./build/data", train=False, download=True, transform=transform
