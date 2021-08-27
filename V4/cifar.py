@@ -52,7 +52,11 @@ testsize = eval_feature.sizeclassicaldataset("cifar", False)
 print("================ CREATE CIFAR FEATURE ================")
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Linear(512, 100)
+net.classifier = torch.nn.Identity()
+net = net.cuda()
+net.classifier = eval_feature.train_frozenfeature_classifier(
+    finetuneloader, net, trainsize, 512, 100
+)
 net = net.cuda()
 net.train()
 
@@ -61,9 +65,9 @@ import collections
 import random
 
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 16
+nbepoch = 3
 
 print("train")
 for epoch in range(nbepoch):
