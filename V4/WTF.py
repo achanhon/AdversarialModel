@@ -43,7 +43,8 @@ ftest = open("build/test.txt", "w")
 with torch.no_grad():
     for x, y in testloader:
         x = x.cuda()
-        z = net(x)
+        y = y.numpy()
+        z = net(x).cpu().numpy()
         for i in range(y.shape[0]):
             ftest.write(str(y[i]) + " ")
             for j in range(512):
