@@ -15,7 +15,10 @@ device = "cuda"
 torch.cuda.empty_cache()
 cudnn.benchmark = True
 
-print("load data")
+import eval_feature
+
+
+print("================ LOAD DATA ================")
 trainset = torchvision.datasets.CIFAR10(
     root="./build/data",
     train=True,
@@ -49,7 +52,7 @@ print("================ CREATE CIFAR FEATURE ================")
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
 net.classifier = torch.nn.Linear(512, 10)
-net = net.to(device)
+net = net.cuda()
 net.train()
 
 print("train setting")
@@ -65,7 +68,7 @@ print("train")
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
     total, correct = 0, 0
-    for inputs, targets in trainloader:
+    for inputs, targets in finetuneloader:
         inputs, targets = inputs.to(device), targets.to(device)
         outputs = net(inputs)
 
@@ -87,8 +90,6 @@ for epoch in range(nbepoch):
     if correct > 0.98 * total:
         break
 
-del finetuneset, trainloader, criterion, meanloss, optimizer
-
 print(
     "accuracy = ",
     eval_feature.compute_accuracy(testloader, net, testsize),
@@ -96,8 +97,6 @@ print(
 
 
 print("================ CREATE CIFAR CLASSIFIER ================")
-import eval_feature
-
 net.classifier = torch.nn.Identity()
 net.classifier = eval_feature.train_frozenfeature_classifier(
     classifierloader, net, classifiersize, 512, 10
