@@ -81,11 +81,10 @@ if __name__ == "__main__":
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize((32, 32)),
-            torchvision.transforms.Grayscale(num_output_channels=3),
             torchvision.transforms.ToTensor(),
         ]
     )
-    trainset = torchvision.datasets.MNIST(
+    trainset = torchvision.datasets.SVHN(
         root="./build/data", train=True, download=True, transform=transform
     )
     trainloader = torch.utils.data.DataLoader(
@@ -100,16 +99,16 @@ if __name__ == "__main__":
 
     print("train classifier on the top of the encoder")
     classifier = train_frozenfeature_classifier(
-        trainloader, encoder, sizeclassicaldataset("mnist", True), 512, 10
+        trainloader, encoder, sizeclassicaldataset("svhn", True), 512, 10
     )
 
     print("eval classifier")
     net = torch.nn.Sequential(encoder, classifier)
     print(
         "train accuracy",
-        compute_accuracy(trainloader, net, sizeclassicaldataset("mnist", True)),
+        compute_accuracy(trainloader, net, sizeclassicaldataset("svhn", True)),
     )
-    testset = torchvision.datasets.MNIST(
+    testset = torchvision.datasets.SVHN(
         root="./build/data", train=False, download=True, transform=transform
     )
     testloader = torch.utils.data.DataLoader(
@@ -117,5 +116,5 @@ if __name__ == "__main__":
     )
     print(
         "accuracy = ",
-        compute_accuracy(testloader, net, sizeclassicaldataset("mnist", False)),
+        compute_accuracy(testloader, net, sizeclassicaldataset("svhn", False)),
     )
