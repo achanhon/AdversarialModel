@@ -56,7 +56,7 @@ def train_frozenfeature_classifier(
             i += lenx
 
     print("solve SVM", datasetsize, featuredim)
-    classifier = svm.LinearSVC(max_iter=50000)
+    classifier = svm.LinearSVC()
     classifier.fit(X, Y)
 
     print("extract torch classifier")
@@ -115,6 +115,6 @@ if __name__ == "__main__":
         compute_accuracy(trainloader, net, sizeclassicaldataset("cifar", True)),
     )
     print(
-        "accuracy = ",
-        compute_accuracy(testloader, net, sizeclassicaldataset("svhn", False)),
+        "accuracy",
+        compute_accuracy(testloader, net, sizeclassicaldataset("cifar", False)),
     )
