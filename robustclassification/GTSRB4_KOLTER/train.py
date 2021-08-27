@@ -65,10 +65,8 @@ def getKolterVGG():
 
     koltervgg.add_module("conv31", torch.nn.Conv2d(128, 256, kernel_size=3, padding=1))
     koltervgg.add_module("relu31", torch.nn.ReLU())
-    koltervgg.add_module("conv32", torch.nn.Conv2d(256, 256, kernel_size=3, padding=1))
+    koltervgg.add_module("conv32", torch.nn.Conv2d(256, 512, kernel_size=4, stride=4))
     koltervgg.add_module("relu32", torch.nn.ReLU())
-    koltervgg.add_module("conv33", torch.nn.Conv2d(256, 512, kernel_size=4, stride=4))
-    koltervgg.add_module("relu33", torch.nn.ReLU())
 
     if whereIam == "wdtim719z":
         koltervgg.add_module("flatten", computeaccuracy.MyFlatten())
