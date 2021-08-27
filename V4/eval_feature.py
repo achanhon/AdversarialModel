@@ -1,7 +1,7 @@
 import torch
 
 
-def sizeclassicaldataset(name, train):
+def sizeDataset(name, train):
     if name == "cifar" and train:
         return 50000
     if name == "cifar" and not train:
@@ -21,25 +21,58 @@ def sizeclassicaldataset(name, train):
     quit()
 
 
-def compute_accuracy(batchprovider, net, datasetsize, device="cuda"):
+def compute_accuracy(batchprovider, net, datasetsize):
     with torch.no_grad():
-        net.to(device)
+        net = net.cuda()
         net.eval()
         accuracy = []
         for x, y in batchprovider:
-            x, y = x.to(device), y.to(device)
+            x, y = x.cuda(), y.cuda()
             _, z = (net(x)).max(1)
             accuracy.append((y == z).float().sum())
         accuracy = torch.Tensor(accuracy).sum() / datasetsize
-        return accuracy.cpu().detach().numpy()
+        return accuracy.cpu().numpy()
+
+
+def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
+    criterion = torch.nn.CrossEntropyLoss()
+    original_x = x
+
+    for i in range(iters):
+        x.requires_grad = True
+        opt = torch.optim.Adam([x], lr=1)
+
+        loss = criterion(net(x), y)
+        opt.zero_grad()
+        loss.backward()
+
+        adv_x = x + alpha * x.grad.sign()
+        eta = torch.clamp(adv_x - original_x, min=-radius, max=radius)
+        x = (original_x + eta).detach_()
+    return torch.clamp(x, min=0, max=1)
+
+
+def compute_robust_accuracy(batchprovider, net, datasetsize):
+    net.to(device)
+    net.eval()
+    accuracy = []
+    for x, y in batchprovider:
+        x, y = x.to(device), y.to(device)
+
+        xx = pgd_attack(net, x, y)
+
+        _, z = (net(xx)).max(1)
+        accuracy.append((y == z).float().sum())
+    accuracy = torch.Tensor(accuracy).sum() / datasetsize
+    return accuracy.cpu().detach().numpy()
 
 
 from sklearn import svm
 import numpy
 
 
-def train_frozenfeature_classifier(
-    batchprovider, encoder, datasetsize, featuredim, nbclasses, device="cuda"
+def trainClassifierOnFrozenfeature(
+    batchprovider, encoder, datasetsize, featuredim, nbclasses
 ):
     print("extract features")
     X = numpy.zeros((datasetsize, featuredim))
@@ -77,6 +110,12 @@ if __name__ == "__main__":
     os.system("mkdir build")
     os.system("mv data build")
 
+    print("import pretrained model")
+    net = torchvision.models.vgg13(pretrained=True)
+    net.avgpool = torch.nn.Identity()
+    net.classifier = torch.nn.Identity()
+    net.cuda()
+
     print("import dataset")
     trainset = torchvision.datasets.CIFAR10(
         root="./build/data",
@@ -97,24 +136,17 @@ if __name__ == "__main__":
         testset, batch_size=64, shuffle=True, num_workers=2
     )
 
-    print("import pretrained model")
-    encoder = torchvision.models.vgg13(pretrained=True)
-    encoder.avgpool = torch.nn.Identity()
-    encoder.classifier = torch.nn.Identity()
-    encoder.cuda()
-
     print("train classifier on the top of the encoder")
-    classifier = train_frozenfeature_classifier(
-        trainloader, encoder, sizeclassicaldataset("cifar", True), 512, 10
+    net.classifier = train_frozenfeature_classifier(
+        trainloader, net, sizeDataset("cifar", True), 512, 10
     )
 
-    print("eval classifier")
-    net = torch.nn.Sequential(encoder, classifier)
+    print("eval")
     print(
         "train accuracy",
-        compute_accuracy(trainloader, net, sizeclassicaldataset("cifar", True)),
+        compute_accuracy(trainloader, net, sizeDataset("cifar", True)),
     )
     print(
         "accuracy",
-        compute_accuracy(testloader, net, sizeclassicaldataset("cifar", False)),
+        compute_accuracy(testloader, net, sizeDataset("cifar", False)),
     )
