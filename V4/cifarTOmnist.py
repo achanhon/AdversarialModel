@@ -89,7 +89,7 @@ trainloader = torch.utils.data.DataLoader(
     trainset, batch_size=64, shuffle=True, num_workers=2
 )
 
-print("train classifier on MNIST the top of the CIFAR encoder")
+print("train classifier on SVHN the top of the CIFAR encoder")
 net.classifier = torch.nn.Identity()
 
 classifier = eval_feature.train_frozenfeature_classifier(
@@ -122,7 +122,7 @@ del net, classifier, cifarnet
 print("================ COMPARE TO IMAGENET ONE ================")
 
 
-print("train classifier on MNIST the top of the IMAGENET encoder")
+print("train classifier on SVHN the top of the IMAGENET encoder")
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
 net.classifier = torch.nn.Identity()
