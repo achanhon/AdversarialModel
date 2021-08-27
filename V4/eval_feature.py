@@ -57,7 +57,7 @@ def train_frozenfeature_classifier(
 
     print("solve SVM", datasetsize, featuredim)
     classifier = svm.LinearSVC()
-    classifier.fit(X, Y)
+    classifier.fit(X * 100, Y)
 
     print("extract torch classifier")
     classifierNN = torch.nn.Linear(featuredim, nbclasses)
