@@ -136,7 +136,7 @@ print("eval classifier")
 imagenet = torch.nn.Sequential(net, classifier)
 print(
     "train accuracy",
-    compute_accuracy(
+    eval_feature.compute_accuracy(
         trainloader, imagenet, eval_feature.sizeclassicaldataset("svhn", True)
     ),
 )
@@ -148,7 +148,7 @@ testloader = torch.utils.data.DataLoader(
 )
 print(
     "accuracy = ",
-    compute_accuracy(
+    eval_feature.compute_accuracy(
         testloader, imagenet, eval_feature.sizeclassicaldataset("svhn", False)
     ),
 )
