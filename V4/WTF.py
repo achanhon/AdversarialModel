@@ -23,12 +23,14 @@ testloader = torch.utils.data.DataLoader(
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
 net.classifier = torch.nn.Identity()
+net.cuda()
 
 ftrain = open("build/train.txt", "w")
 with torch.no_grad():
     for x, y in classifierloader:
-        x = x.to(device)
-        z = net(x)
+        x = x.cuda()
+        y = y.numpy()
+        z = net(x).cpu().numpy()
         for i in range(y.shape[0]):
             ftrain.write(str(y[i]) + " ")
             for j in range(512):
@@ -40,12 +42,12 @@ ftrain.close()
 ftest = open("build/test.txt", "w")
 with torch.no_grad():
     for x, y in testloader:
-        x = x.to(device)
+        x = x.cuda()
         z = net(x)
         for i in range(y.shape[0]):
-            ftrain.write(str(y[i]) + " ")
+            ftest.write(str(y[i]) + " ")
             for j in range(512):
                 if z[i][j] != 0.0:
-                    ftrain.write(str(j + 1) + ":" + str(z[i][j]) + " ")
-            ftrain.write("513:1\n")
+                    ftest.write(str(j + 1) + ":" + str(z[i][j]) + " ")
+            ftest.write("513:1\n")
 ftest.close()
