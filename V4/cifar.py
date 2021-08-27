@@ -50,13 +50,10 @@ trainsize = eval_feature.sizeclassicaldataset("cifar", True)
 testsize = eval_feature.sizeclassicaldataset("cifar", False)
 
 print("================ CREATE CIFAR FEATURE ================")
-net = torchvision.models.vgg13(pretrained=True)
-net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Identity()
-net = net.cuda()
-net.classifier = eval_feature.train_frozenfeature_classifier(
-    finetuneloader, net, trainsize, 512, 100
-)
+encoder = torchvision.models.vgg13(pretrained=True)
+encoder.avgpool = torch.nn.Identity()
+
+net = torch.nn.Sequential(encoder, torch.nn.Linear(1024, 100))
 net = net.cuda()
 net.train()
 
@@ -96,12 +93,13 @@ for epoch in range(nbepoch):
         break
 
 print("================ CREATE CIFAR CLASSIFIER ================")
-net.eval()
-net.classifier = torch.nn.Identity()
-net.classifier = eval_feature.train_frozenfeature_classifier(
-    classifierloader, net, trainsize, 512, 10
+encoder.eval()
+classifier = eval_feature.train_frozenfeature_classifier(
+    classifierloader, encoder, trainsize, 1024, 10
 )
 
+net = torch.nn.Sequential(encoder, classifier)
+net = net.cuda()
 print(
     "accuracy = ",
     eval_feature.compute_accuracy(testloader, net, testsize),
@@ -109,15 +107,16 @@ print(
 
 print("================ COMPARE TO IMAGENET FEATURE ================")
 
-net = torchvision.models.vgg13(pretrained=True)
-net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Identity()
-net.cuda()
+encoder = torchvision.models.vgg13(pretrained=True)
+encoder.avgpool = torch.nn.Identity()
+encoder = encoder.cuda()
 
-net.classifier = eval_feature.train_frozenfeature_classifier(
-    classifierloader, net, trainsize, 512, 10
+classifier = eval_feature.train_frozenfeature_classifier(
+    classifierloader, encoder, trainsize, 1024, 10
 )
 
+net = torch.nn.Sequential(encoder, classifier)
+net = net.cuda()
 print(
     "accuracy = ",
     eval_feature.compute_accuracy(testloader, net, testsize),
