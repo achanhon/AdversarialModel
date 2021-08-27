@@ -65,11 +65,10 @@ for epoch in range(nbepoch):
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
 
-    torch.save(net, "build/model.pth")
+    # torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
         break
-    sleep(3)
 
 del trainset, trainloader, criterion, meanloss, optimizer
 
@@ -80,12 +79,11 @@ print("import dataset")
 transform = torchvision.transforms.Compose(
     [
         torchvision.transforms.Resize((32, 32)),
-        torchvision.transforms.Grayscale(num_output_channels=3),
         torchvision.transforms.ToTensor(),
     ]
 )
-trainset = torchvision.datasets.MNIST(
-    root="./build/data", train=True, download=True, transform=transform
+trainset = torchvision.datasets.SVHN(
+    root="./build/data", split="train", download=True, transform=transform
 )
 trainloader = torch.utils.data.DataLoader(
     trainset, batch_size=64, shuffle=True, num_workers=2
@@ -95,24 +93,28 @@ print("train classifier on MNIST the top of the CIFAR encoder")
 net.classifier = torch.nn.Identity()
 
 classifier = eval_feature.train_frozenfeature_classifier(
-    trainloader, net, sizeclassicaldataset("mnist", True), 512, 10
+    trainloader, net, eval_feature.sizeclassicaldataset("svhn", True), 512, 10
 )
 
 print("eval classifier")
 cifarnet = torch.nn.Sequential(net, classifier)
 print(
     "train accuracy",
-    compute_accuracy(trainloader, cifarnet, sizeclassicaldataset("mnist", True)),
+    compute_accuracy(
+        trainloader, cifarnet, eval_feature.sizeclassicaldataset("svhn", True)
+    ),
 )
-testset = torchvision.datasets.MNIST(
-    root="./build/data", train=False, download=True, transform=transform
+testset = torchvision.datasets.SVHN(
+    root="./build/data", split="test", download=True, transform=transform
 )
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=64, shuffle=True, num_workers=2
 )
 print(
     "accuracy = ",
-    compute_accuracy(testloader, cifarnet, sizeclassicaldataset("mnist", False)),
+    compute_accuracy(
+        testloader, cifarnet, eval_feature.sizeclassicaldataset("svhn", False)
+    ),
 )
 
 del net, classifier, cifarnet
@@ -127,14 +129,16 @@ net.classifier = torch.nn.Identity()
 net.cuda()
 
 classifier = eval_feature.train_frozenfeature_classifier(
-    trainloader, net, sizeclassicaldataset("mnist", True), 512, 10
+    trainloader, net, eval_feature.sizeclassicaldataset("svhn", True), 512, 10
 )
 
 print("eval classifier")
 imagenet = torch.nn.Sequential(net, classifier)
 print(
     "train accuracy",
-    compute_accuracy(trainloader, imagenet, sizeclassicaldataset("mnist", True)),
+    compute_accuracy(
+        trainloader, imagenet, eval_feature.sizeclassicaldataset("svhn", True)
+    ),
 )
 testset = torchvision.datasets.MNIST(
     root="./build/data", train=False, download=True, transform=transform
@@ -144,5 +148,7 @@ testloader = torch.utils.data.DataLoader(
 )
 print(
     "accuracy = ",
-    compute_accuracy(testloader, imagenet, sizeclassicaldataset("mnist", False)),
+    compute_accuracy(
+        testloader, imagenet, eval_feature.sizeclassicaldataset("svhn", False)
+    ),
 )
