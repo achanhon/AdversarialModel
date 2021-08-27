@@ -78,17 +78,23 @@ if __name__ == "__main__":
     os.system("mv data build")
 
     print("import dataset")
-    transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.Resize((32, 32)),
-            torchvision.transforms.ToTensor(),
-        ]
+    trainset = torchvision.datasets.CIFAR10(
+        root="./build/data",
+        train=True,
+        download=True,
+        transform=torchvision.transforms.ToTensor(),
     )
-    trainset = torchvision.datasets.SVHN(
-        root="./build/data", split="train", download=True, transform=transform
+    testset = torchvision.datasets.CIFAR10(
+        root="./build/data",
+        train=False,
+        download=True,
+        transform=torchvision.transforms.ToTensor(),
     )
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=64, shuffle=True, num_workers=2
+    )
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=64, shuffle=True, num_workers=2
     )
 
     print("import pretrained model")
@@ -99,20 +105,14 @@ if __name__ == "__main__":
 
     print("train classifier on the top of the encoder")
     classifier = train_frozenfeature_classifier(
-        trainloader, encoder, sizeclassicaldataset("svhn", True), 512, 10
+        trainloader, encoder, sizeclassicaldataset("cifar", True), 512, 10
     )
 
     print("eval classifier")
     net = torch.nn.Sequential(encoder, classifier)
     print(
         "train accuracy",
-        compute_accuracy(trainloader, net, sizeclassicaldataset("svhn", True)),
-    )
-    testset = torchvision.datasets.SVHN(
-        root="./build/data", split="test", download=True, transform=transform
-    )
-    testloader = torch.utils.data.DataLoader(
-        testset, batch_size=64, shuffle=True, num_workers=2
+        compute_accuracy(trainloader, net, sizeclassicaldataset("cifar", True)),
     )
     print(
         "accuracy = ",
