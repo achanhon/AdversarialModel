@@ -2,20 +2,20 @@ import torch
 
 
 def sizeclassicaldataset(name, train):
-    if name == "mnist" and train:
-        return 60000
-    if name == "mnist" and not train:
-        return 10000
-
-    if name == "cifar10" and train:
+    if name == "cifar" and train:
         return 50000
-    if name == "cifar10" and not train:
+    if name == "cifar" and not train:
         return 10000
 
     if name == "svhn" and train:
         return 73257
     if name == "svhn" and not train:
         return 26032
+
+    if name == "mnist" and train:
+        return 60000
+    if name == "mnist" and not train:
+        return 10000
 
     print("unknown dataset")
     quit()
@@ -56,8 +56,8 @@ def train_frozenfeature_classifier(
             i += lenx
 
     print("solve SVM", datasetsize, featuredim)
-    classifier = svm.LinearSVC()
-    classifier.fit(X * 100, Y)
+    classifier = svm.LinearSVC(max_iter=50000)
+    classifier.fit(X, Y)
 
     print("extract torch classifier")
     classifierNN = torch.nn.Linear(featuredim, nbclasses)

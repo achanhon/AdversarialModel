@@ -19,6 +19,12 @@ import eval_feature
 
 
 print("================ LOAD DATA ================")
+finetuneset = torchvision.datasets.CIFAR100(
+    root="./build/data",
+    train=True,
+    download=True,
+    transform=torchvision.transforms.ToTensor(),
+)
 trainset = torchvision.datasets.CIFAR10(
     root="./build/data",
     train=True,
@@ -31,27 +37,22 @@ testset = torchvision.datasets.CIFAR10(
     download=True,
     transform=torchvision.transforms.ToTensor(),
 )
-finetunesize = int(eval_feature.sizeclassicaldataset("cifar10", True) * 0.33)
-classifiersize = eval_feature.sizeclassicaldataset("cifar10", True) - finetunesize
-finetuneset, classifierset = torch.utils.data.random_split(
-    trainset, [finetunesize, classifiersize]
-)
-
 finetuneloader = torch.utils.data.DataLoader(
     finetuneset, batch_size=64, shuffle=True, num_workers=2
 )
 classifierloader = torch.utils.data.DataLoader(
-    classifierset, batch_size=64, shuffle=True, num_workers=2
+    trainset, batch_size=64, shuffle=True, num_workers=2
 )
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=64, shuffle=True, num_workers=2
 )
-testsize = eval_feature.sizeclassicaldataset("cifar10", False)
+trainsize = eval_feature.sizeclassicaldataset("cifar", True)
+testsize = eval_feature.sizeclassicaldataset("cifar", False)
 
 print("================ CREATE CIFAR FEATURE ================")
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Linear(512, 10)
+net.classifier = torch.nn.Linear(512, 100)
 net = net.cuda()
 net.train()
 
@@ -62,7 +63,7 @@ import random
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 8
+nbepoch = 16
 
 print("train")
 for epoch in range(nbepoch):
@@ -90,16 +91,11 @@ for epoch in range(nbepoch):
     if correct > 0.98 * total:
         break
 
-print(
-    "accuracy = ",
-    eval_feature.compute_accuracy(testloader, net, testsize),
-)
-
-
 print("================ CREATE CIFAR CLASSIFIER ================")
+net.eval()
 net.classifier = torch.nn.Identity()
 net.classifier = eval_feature.train_frozenfeature_classifier(
-    classifierloader, net, classifiersize, 512, 10
+    classifierloader, net, trainsize, 512, 10
 )
 
 print(
@@ -115,7 +111,7 @@ net.classifier = torch.nn.Identity()
 net.cuda()
 
 net.classifier = eval_feature.train_frozenfeature_classifier(
-    classifierloader, net, classifiersize, 512, 10
+    classifierloader, net, trainsize, 512, 10
 )
 
 print(
