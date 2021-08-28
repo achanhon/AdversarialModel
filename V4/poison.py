@@ -23,6 +23,7 @@ def compute_poisonedmodel(
         Y[i : i + lenx] = y
         i += lenx
 
+    X, Y = X.cpu(), Y.cpu()
     poisonnedDataset = torch.utils.data.TensorDataset(X, Y)
     poisonnedloader = torch.utils.data.DataLoader(
         poisonnedDataset, batch_size=64, shuffle=True, num_workers=2
