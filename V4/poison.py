@@ -15,11 +15,11 @@ def compute_poisonedmodel(
     net.classifier = proxymodel
     i = 0
     for x, y in batchprovider:
-        x, y = x.to(device), y.to(device)
+        x, y = x.cuda(), y.cuda()
         pgd = eval_feature.pgd_attack(net, x, y)
         lenx = x.shape[0]
-        X[i : i + lenx] = pgd.cpu().numpy()
-        Y[i : i + lenx] = y.cpu().numpy()
+        X[i : i + lenx] = pgd
+        Y[i : i + lenx] = y
         i += lenx
 
     poisonnedDataset = torch.utils.data.TensorDataset(X, Y)
@@ -58,7 +58,7 @@ def eval_robustness_poisonning(
     proxy = eval_feature.trainClassifierOnFrozenfeature(
         testloader, net, testsize, featuredim, nbclasses
     )
-    poisonnedmodel = compute_poisonedmodel(
+    poisonnedmodel,_ = compute_poisonedmodel(
         trainloader, proxy, net, trainsize, featuredim, nbclasses
     )
 

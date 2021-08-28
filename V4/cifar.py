@@ -10,8 +10,8 @@ import torch.backends.cudnn as cudnn
 import torchvision
 
 if not torch.cuda.is_available():
+    print("no cuda, no run")
     quit()
-device = "cuda"
 torch.cuda.empty_cache()
 cudnn.benchmark = True
 
@@ -72,7 +72,7 @@ for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
     total, correct = 0, 0
     for inputs, targets in finetuneloader:
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs.cuda(), targets.cuda()
         outputs = net(inputs)
 
         loss = criterion(outputs, targets)
@@ -97,7 +97,7 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    trainloader, testsize, net, trainsize, testsize, 512, 10
+    trainloader, testloader, net, trainsize, testsize, 512, 10
 )
 
 
@@ -123,7 +123,7 @@ for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
     total, correct = 0, 0
     for inputs, targets in finetuneloader:
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs.cuda(), targets.cuda()
 
         fsgm = eval_feature.fsgm_attack(net, inputs, targets)
 
@@ -177,7 +177,7 @@ for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
     total, correct = 0, 0
     for inputs, targets in finetuneloader:
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs.cuda(), targets.cuda()
 
         pgd = eval_feature.pgd_attack(net, inputs, targets)
 
@@ -196,6 +196,7 @@ for epoch in range(nbepoch):
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
+            quit()###debug
 
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:

@@ -69,11 +69,11 @@ def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
 
 def compute_robust_accuracy(batchprovider, net, datasetsize):
     return 0  # debug
-    net.to(device)
+    net.cuda()
     net.eval()
     accuracy = []
     for x, y in batchprovider:
-        x, y = x.to(device), y.to(device)
+        x, y = x.cuda(), y.cuda()
 
         xx = pgd_attack(net, x, y)
 
@@ -98,7 +98,7 @@ def trainClassifierOnFrozenfeature(
     with torch.no_grad():
         i = 0
         for x, y in batchprovider:
-            x, y = x.to(device), y.to(device)
+            x, y = x.cuda(), y.cuda()
             feature = encoder(x)
             lenx = x.shape[0]
             X[i : i + lenx] = feature.cpu().numpy()
