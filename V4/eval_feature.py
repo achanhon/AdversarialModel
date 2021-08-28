@@ -34,6 +34,19 @@ def compute_accuracy(batchprovider, net, datasetsize):
         return accuracy.cpu().numpy()
 
 
+def fsgm_attack(net, x, y, radius=3.0 / 255):
+    criterion = torch.nn.CrossEntropyLoss()
+    x.requires_grad = True
+    opt = torch.optim.Adam([x], lr=1)
+
+    loss = criterion(net(x), y)
+    opt.zero_grad()
+    loss.backward()
+
+    adv_x = x + radius * x.grad.sign()
+    return torch.clamp(adv_x, min=0, max=1)
+
+
 def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
     criterion = torch.nn.CrossEntropyLoss()
     original_x = x

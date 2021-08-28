@@ -16,9 +16,10 @@ torch.cuda.empty_cache()
 cudnn.benchmark = True
 
 import eval_feature
+import poison
 
 
-print("================ LOAD DATA ================")
+print("load data")
 finetuneset = torchvision.datasets.CIFAR100(
     root="./build/data",
     train=True,
@@ -49,11 +50,11 @@ testloader = torch.utils.data.DataLoader(
 trainsize = eval_feature.sizeclassicaldataset("cifar", True)
 testsize = eval_feature.sizeclassicaldataset("cifar", False)
 
-print("================ CREATE CIFAR FEATURE ================")
-encoder = torchvision.models.vgg13(pretrained=True)
-encoder.avgpool = torch.nn.Identity()
-
-net = torch.nn.Sequential(encoder, torch.nn.Linear(1024, 100))
+print("================ NAIVE FEATURE ================")
+print("create feature")
+net = torchvision.models.vgg13(pretrained=True)
+net.avgpool = torch.nn.Identity()
+net.classifier = torch.nn.Linear(512, 100)
 net = net.cuda()
 net.train()
 
@@ -64,7 +65,7 @@ import random
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 3
+nbepoch = 10
 
 print("train")
 for epoch in range(nbepoch):
@@ -92,32 +93,114 @@ for epoch in range(nbepoch):
     if correct > 0.98 * total:
         break
 
-print("================ CREATE CIFAR CLASSIFIER ================")
-encoder.eval()
-classifier = eval_feature.train_frozenfeature_classifier(
-    classifierloader, encoder, trainsize, 1024, 10
+print("eval feature")
+net.classifier = torch.nn.Identity()
+poison.eval_robustness_poisonning(
+    classifierloader, testsize, net, trainsize, testsize, 512, 10
 )
 
-net = torch.nn.Sequential(encoder, classifier)
+
+print("================ FSGM FEATURE ================")
+print("create feature")
+net = torchvision.models.vgg13(pretrained=True)
+net.avgpool = torch.nn.Identity()
+net.classifier = torch.nn.Linear(512, 100)
 net = net.cuda()
-print(
-    "accuracy = ",
-    eval_feature.compute_accuracy(testloader, net, testsize),
+net.train()
+
+print("train setting")
+import collections
+import random
+
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
+meanloss = collections.deque(maxlen=200)
+nbepoch = 10
+
+print("train")
+for epoch in range(nbepoch):
+    print("epoch=", epoch, "/", nbepoch)
+    total, correct = 0, 0
+    for inputs, targets in finetuneloader:
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        fsgm = eval_feature.fsgm_attack(net, inputs, targets)
+
+        outputs = net(fsgm)
+
+        loss = criterion(outputs, targets)
+        meanloss.append(loss.cpu().detach().numpy())
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        _, predicted = outputs.max(1)
+        total += targets.shape[0]
+        correct += (predicted == targets).float().sum()
+
+        if random.randint(0, 30) == 0:
+            print("loss=", (sum(meanloss) / len(meanloss)))
+
+    print("train accuracy=", 100.0 * correct / total)
+    if correct > 0.98 * total:
+        break
+
+print("eval feature")
+net.classifier = torch.nn.Identity()
+poison.eval_robustness_poisonning(
+    classifierloader, testsize, net, trainsize, testsize, 512, 10
 )
 
-print("================ COMPARE TO IMAGENET FEATURE ================")
 
-encoder = torchvision.models.vgg13(pretrained=True)
-encoder.avgpool = torch.nn.Identity()
-encoder = encoder.cuda()
-
-classifier = eval_feature.train_frozenfeature_classifier(
-    classifierloader, encoder, trainsize, 1024, 10
-)
-
-net = torch.nn.Sequential(encoder, classifier)
+print("================ PGD FEATURE ================")
+print("create feature")
+net = torchvision.models.vgg13(pretrained=True)
+net.avgpool = torch.nn.Identity()
+net.classifier = torch.nn.Linear(512, 100)
 net = net.cuda()
-print(
-    "accuracy = ",
-    eval_feature.compute_accuracy(testloader, net, testsize),
+net.train()
+
+print("train setting")
+import collections
+import random
+
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
+meanloss = collections.deque(maxlen=200)
+nbepoch = 10
+
+print("train")
+for epoch in range(nbepoch):
+    print("epoch=", epoch, "/", nbepoch)
+    total, correct = 0, 0
+    for inputs, targets in finetuneloader:
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        pgd = eval_feature.pgd_attack(net, inputs, targets)
+
+        outputs = net(pgd)
+
+        loss = criterion(outputs, targets)
+        meanloss.append(loss.cpu().detach().numpy())
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        _, predicted = outputs.max(1)
+        total += targets.shape[0]
+        correct += (predicted == targets).float().sum()
+
+        if random.randint(0, 30) == 0:
+            print("loss=", (sum(meanloss) / len(meanloss)))
+
+    print("train accuracy=", 100.0 * correct / total)
+    if correct > 0.98 * total:
+        break
+
+print("eval feature")
+net.classifier = torch.nn.Identity()
+poison.eval_robustness_poisonning(
+    classifierloader, testsize, net, trainsize, testsize, 512, 10
 )
