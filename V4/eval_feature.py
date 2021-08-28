@@ -35,6 +35,7 @@ def compute_accuracy(batchprovider, net, datasetsize):
 
 
 def fsgm_attack(net, x, y, radius=3.0 / 255):
+    return x ###debug
     criterion = torch.nn.CrossEntropyLoss()
     x.requires_grad = True
     opt = torch.optim.Adam([x], lr=1)
@@ -48,6 +49,7 @@ def fsgm_attack(net, x, y, radius=3.0 / 255):
 
 
 def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
+    return x ###debug
     criterion = torch.nn.CrossEntropyLoss()
     original_x = x
 
@@ -66,6 +68,7 @@ def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
 
 
 def compute_robust_accuracy(batchprovider, net, datasetsize):
+    return 0 #debug
     net.to(device)
     net.eval()
     accuracy = []
@@ -87,6 +90,7 @@ import numpy
 def trainClassifierOnFrozenfeature(
     batchprovider, encoder, datasetsize, featuredim, nbclasses
 ):
+    return torch.nn.Linear(featuredim, nbclasses) ###debug
     print("extract features")
     X = numpy.zeros((datasetsize, featuredim))
     Y = numpy.zeros(datasetsize)
