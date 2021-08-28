@@ -41,14 +41,14 @@ testset = torchvision.datasets.CIFAR10(
 finetuneloader = torch.utils.data.DataLoader(
     finetuneset, batch_size=64, shuffle=True, num_workers=2
 )
-classifierloader = torch.utils.data.DataLoader(
+trainloader = torch.utils.data.DataLoader(
     trainset, batch_size=64, shuffle=True, num_workers=2
 )
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=64, shuffle=True, num_workers=2
 )
-trainsize = eval_feature.sizeclassicaldataset("cifar", True)
-testsize = eval_feature.sizeclassicaldataset("cifar", False)
+trainsize = eval_feature.sizeDataset("cifar", True)
+testsize = eval_feature.sizeDataset("cifar", False)
 
 print("================ NAIVE FEATURE ================")
 print("create feature")
@@ -88,6 +88,7 @@ for epoch in range(nbepoch):
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
+            break  #####debug
 
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
@@ -96,7 +97,7 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    classifierloader, testsize, net, trainsize, testsize, 512, 10
+    trainloader, testsize, net, trainsize, testsize, 512, 10
 )
 
 
@@ -141,7 +142,7 @@ for epoch in range(nbepoch):
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
-            break #####debug
+            break  #####debug
 
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
@@ -150,7 +151,7 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    classifierloader, testsize, net, trainsize, testsize, 512, 10
+    trainloader, testloader, net, trainsize, testsize, 512, 10
 )
 
 
@@ -203,5 +204,5 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    classifierloader, testsize, net, trainsize, testsize, 512, 10
+    trainloader, testloader, net, trainsize, testsize, 512, 10
 )

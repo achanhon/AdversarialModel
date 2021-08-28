@@ -40,11 +40,11 @@ def compute_poisonedmodel(
 
 
 def eval_robustness_poisonning(
-    trainloader, testloader, encoder, trainsize, testsize, featuredim, nbclasses
+    trainloader, testloader, net, trainsize, testsize, featuredim, nbclasses
 ):
     print("eval clean model")
     clean_model = eval_feature.trainClassifierOnFrozenfeature(
-        trainloader, encoder, trainsize, featuredim, nbclasses
+        trainloader, net, trainsize, featuredim, nbclasses
     )
     net.classifier = clean_model
     cleanaccuracy = eval_feature.compute_accuracy(testloader, net, testsize)
@@ -56,7 +56,7 @@ def eval_robustness_poisonning(
     print("generate poisoned model")
     net.classifier = torch.nn.Identity()
     proxy = eval_feature.trainClassifierOnFrozenfeature(
-        testloader, encoder, testsize, featuredim, nbclasses
+        testloader, net, testsize, featuredim, nbclasses
     )
     poisonnedmodel = compute_poisonedmodel(
         trainloader, proxy, net, trainsize, featuredim, nbclasses
