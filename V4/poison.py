@@ -13,6 +13,7 @@ def compute_poisonedmodel(
     Y = torch.Tensor(trainsize).cuda().long()
 
     net.classifier = proxymodel
+    net.cuda()
     i = 0
     for x, y in batchprovider:
         x, y = x.cuda(), y.cuda()
@@ -58,7 +59,7 @@ def eval_robustness_poisonning(
     proxy = eval_feature.trainClassifierOnFrozenfeature(
         testloader, net, testsize, featuredim, nbclasses
     )
-    poisonnedmodel,_ = compute_poisonedmodel(
+    poisonnedmodel, _ = compute_poisonedmodel(
         trainloader, proxy, net, trainsize, featuredim, nbclasses
     )
 

@@ -22,6 +22,7 @@ def sizeDataset(name, train):
 
 
 def compute_accuracy(batchprovider, net, datasetsize):
+    net.cuda()
     with torch.no_grad():
         net = net.cuda()
         net.eval()
@@ -37,6 +38,7 @@ def compute_accuracy(batchprovider, net, datasetsize):
 def fsgm_attack(net, x, y, radius=3.0 / 255):
     if __debug__:
         return x
+    net.cuda()
     criterion = torch.nn.CrossEntropyLoss()
     x.requires_grad = True
     opt = torch.optim.Adam([x], lr=1)
@@ -52,6 +54,7 @@ def fsgm_attack(net, x, y, radius=3.0 / 255):
 def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
     if __debug__:
         return x
+    net.cuda()
     criterion = torch.nn.CrossEntropyLoss()
     original_x = x
 
@@ -93,6 +96,7 @@ def trainClassifierOnFrozenfeature(
 ):
     if __debug__:
         return torch.nn.Linear(featuredim, nbclasses)
+    encoder.cuda()
     print("extract features")
     X = numpy.zeros((datasetsize, featuredim))
     Y = numpy.zeros(datasetsize)
