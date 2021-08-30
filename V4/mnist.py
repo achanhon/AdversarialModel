@@ -25,9 +25,8 @@ class ChannelHACK(torch.nn.Module):
     def forward(self, x):
         if len(x.shape) == 4 and x.shape[1] == 3:
             xgray = 0.33333 * (x[:, 0, :, :] + x[:, 1, :, :] + x[:, 2, :, :])
-            x[:, 0, :, :] = xgray
-            x[:, 1, :, :] = xgray
-            x[:, 2, :, :] = xgray
+            xgray = xgray.view(x.shape[0], 1, x.shape[2], x.shape[3])
+            x = torch.cat([xgray, xgray, xgray], dim=1)
             return x
         if len(x.shape) == 4 and x.shape[1] == 1:
             x = torch.cat([x, x, x], dim=1)
