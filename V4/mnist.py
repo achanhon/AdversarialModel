@@ -123,7 +123,15 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    trainloader, testloader, net, trainsize, testsize, 512, 10, 1
+    trainloader,
+    testloader,
+    net,
+    trainsize,
+    testsize,
+    512,
+    10,
+    inputsize=1,
+    radius=10.0 / 255.0,
 )
 
 
@@ -180,7 +188,15 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    trainloader, testloader, net, trainsize, testsize, 512, 10, 1
+    trainloader,
+    testloader,
+    net,
+    trainsize,
+    testsize,
+    512,
+    10,
+    inputsize=1,
+    radius=10.0 / 255.0,
 )
 
 
@@ -237,5 +253,13 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    trainloader, testloader, net, trainsize, testsize, 512, 10, 1
+    trainloader,
+    testloader,
+    net,
+    trainsize,
+    testsize,
+    512,
+    10,
+    inputsize=1,
+    radius=10.0 / 255.0,
 )
