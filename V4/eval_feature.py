@@ -161,7 +161,7 @@ if __name__ == "__main__":
     )
 
     print("train classifier on the top of the encoder")
-    net.classifier = train_frozenfeature_classifier(
+    net.classifier = trainClassifierOnFrozenfeature(
         trainloader, net, sizeDataset("cifar", True), 512, 10
     )
 

@@ -114,12 +114,14 @@ if __name__ == "__main__":
     )
 
     print("train classifier on the top of the encoder")
-    net.classifier = eval_feature.train_frozenfeature_classifier(
+    net.classifier = eval_feature.trainClassifierOnFrozenfeature(
         trainloader, net, eval_feature.sizeDataset("cifar", True), 512, 10
     )
     print(
         "accuracy",
-        compute_accuracy(testloader, net, eval_feature.sizeDataset("cifar", False)),
+        eval_feature.compute_accuracy(
+            testloader, net, eval_feature.sizeDataset("cifar", False)
+        ),
     )
 
     print("collect 10 targets per classes")
