@@ -51,7 +51,8 @@ def fsgm_attack(net, x, y, radius=3.0 / 255):
     return torch.clamp(adv_x, min=0, max=1)
 
 
-def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
+def pgd_attack(net, x, y, radius=3.0 / 255, alpha=0.333, iters=40):
+    alpha = alpha * radius
     if __debug__:
         return x
     net.cuda()
@@ -72,14 +73,14 @@ def pgd_attack(net, x, y, radius=3.0 / 255, alpha=1.0 / 255, iters=40):
     return torch.clamp(x, min=0, max=1)
 
 
-def compute_robust_accuracy(batchprovider, net, datasetsize):
+def compute_robust_accuracy(batchprovider, net, datasetsize, radius):
     net.cuda()
     net.eval()
     accuracy = []
     for x, y in batchprovider:
         x, y = x.cuda(), y.cuda()
 
-        xx = pgd_attack(net, x, y)
+        xx = pgd_attack(net, x, y, radius=radius)
 
         _, z = (net(xx)).max(1)
         accuracy.append((y == z).float().sum())
