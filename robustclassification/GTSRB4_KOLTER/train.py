@@ -111,13 +111,14 @@ for epoch in range(nbepoch):
     for _, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        if debug or epoch == 1:
+        if debug or epoch == 0:
             outputs = net(inputs)
             loss = criterion(outputs, targets)
         else:
             with torch.no_grad():
                 outputs = net(inputs)
             loss, _ = convex_adversarial.robust_loss(net, 3.0 / 255, inputs, targets)
+            loss *= 0.05
 
         meanloss.append(loss.cpu().data.numpy())
 
