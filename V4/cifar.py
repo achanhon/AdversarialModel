@@ -65,7 +65,7 @@ import random
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 10
+nbepoch = 16
 
 print("train")
 net.cuda()
@@ -118,7 +118,7 @@ import random
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 10
+nbepoch = 64
 
 print("train")
 net.cuda()
