@@ -3,7 +3,7 @@ import eval_feature
 
 
 def compute_poisonedmodel(
-    batchprovider, proxymodel, net, trainsize, featuredim, nbclasses, inputsize=3
+    batchprovider, proxymodel, net, trainsize, featuredim, nbclasses, inputsize
 ):
     ##############################################################################
     # hacker modifies TRAIN data to make the model the more distant from proxy one#
@@ -42,7 +42,14 @@ def compute_poisonedmodel(
 
 
 def eval_robustness_poisonning(
-    trainloader, testloader, net, trainsize, testsize, featuredim, nbclasses
+    trainloader,
+    testloader,
+    net,
+    trainsize,
+    testsize,
+    featuredim,
+    nbclasses,
+    inputsize=3,
 ):
     print("eval clean model")
     clean_model = eval_feature.trainClassifierOnFrozenfeature(
@@ -58,7 +65,7 @@ def eval_robustness_poisonning(
     print("generate poisoned model")
     net.classifier = torch.nn.Identity()
     proxy = eval_feature.trainClassifierOnFrozenfeature(
-        testloader, net, testsize, featuredim, nbclasses
+        testloader, net, testsize, featuredim, nbclasses, inputsize
     )
     poisonnedmodel, _ = compute_poisonedmodel(
         trainloader, proxy, net, trainsize, featuredim, nbclasses
