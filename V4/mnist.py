@@ -40,6 +40,10 @@ class ChannelHACK(torch.nn.Module):
         quit()
 
 
+mnisttransform = torchvision.transforms.Compose(
+    [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
+)
+
 finetuneset = torchvision.datasets.SVHN(
     root="./build/data",
     split="train",
@@ -50,13 +54,13 @@ trainset = torchvision.datasets.MNIST(
     root="./build/data",
     train=True,
     download=True,
-    transform=torchvision.transforms.ToTensor(),
+    transform=mnisttransform,
 )
 testset = torchvision.datasets.MNIST(
     root="./build/data",
     train=False,
     download=True,
-    transform=torchvision.transforms.ToTensor(),
+    transform=mnisttransform,
 )
 finetuneloader = torch.utils.data.DataLoader(
     finetuneset, batch_size=64, shuffle=True, num_workers=2
@@ -67,13 +71,13 @@ trainloader = torch.utils.data.DataLoader(
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=64, shuffle=True, num_workers=2
 )
-trainsize = eval_feature.sizeDataset("cifar", True)
-testsize = eval_feature.sizeDataset("cifar", False)
+trainsize = eval_feature.sizeDataset("mnist", True)
+testsize = eval_feature.sizeDataset("mnist", False)
 
 print("================ NAIVE FEATURE ================")
 print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
-torch.nn.Sequential(ChannelHACK(), net.features)
+net.features = torch.nn.Sequential(ChannelHACK(), net.features)
 net.avgpool = torch.nn.Identity()
 net.classifier = torch.nn.Linear(512, 100)
 net = net.cuda()
@@ -120,14 +124,14 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    trainloader, testloader, net, trainsize, testsize, 512, 10
+    trainloader, testloader, net, trainsize, testsize, 512, 10, 1
 )
 
 
 print("================ FSGM FEATURE ================")
 print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
-torch.nn.Sequential(ChannelHACK(), net.features)
+net.features = torch.nn.Sequential(ChannelHACK(), net.features)
 net.avgpool = torch.nn.Identity()
 net.classifier = torch.nn.Linear(512, 100)
 net = net.cuda()
@@ -177,14 +181,14 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    trainloader, testloader, net, trainsize, testsize, 512, 10
+    trainloader, testloader, net, trainsize, testsize, 512, 10, 1
 )
 
 
 print("================ PGD FEATURE ================")
 print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
-torch.nn.Sequential(ChannelHACK(), net.features)
+net.features = torch.nn.Sequential(ChannelHACK(), net.features)
 net.avgpool = torch.nn.Identity()
 net.classifier = torch.nn.Linear(512, 100)
 net = net.cuda()
@@ -234,5 +238,5 @@ for epoch in range(nbepoch):
 print("eval feature")
 net.classifier = torch.nn.Identity()
 poison.eval_robustness_poisonning(
-    trainloader, testloader, net, trainsize, testsize, 512, 10
+    trainloader, testloader, net, trainsize, testsize, 512, 10, 1
 )

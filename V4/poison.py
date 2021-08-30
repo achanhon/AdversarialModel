@@ -3,13 +3,13 @@ import eval_feature
 
 
 def compute_poisonedmodel(
-    batchprovider, proxymodel, net, trainsize, featuredim, nbclasses
+    batchprovider, proxymodel, net, trainsize, featuredim, nbclasses, inputsize=3
 ):
     ##############################################################################
     # hacker modifies TRAIN data to make the model the more distant from proxy one#
     ##############################################################################
 
-    X = torch.Tensor(trainsize, 3, 32, 32).cuda()
+    X = torch.Tensor(trainsize, inputsize, 32, 32).cuda()
     Y = torch.Tensor(trainsize).cuda().long()
 
     net.classifier = proxymodel
