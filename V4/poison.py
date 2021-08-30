@@ -69,7 +69,14 @@ def eval_robustness_poisonning(
         testloader, net, testsize, featuredim, nbclasses
     )
     poisonnedmodel, _ = compute_poisonedmodel(
-        trainloader, proxy, net, trainsize, featuredim, nbclasses, inputsize,radius=radius
+        trainloader,
+        proxy,
+        net,
+        trainsize,
+        featuredim,
+        nbclasses,
+        inputsize,
+        radius=radius,
     )
 
     print("eval poisoned model")
