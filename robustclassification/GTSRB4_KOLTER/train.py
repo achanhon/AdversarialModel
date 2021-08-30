@@ -92,9 +92,9 @@ if whereIam == "super":
 if computeaccuracy.isonspiro():
     sys.path.append("/scratchm/achanhon/github/convex_adversarial")
 
+criterion = torch.nn.CrossEntropyLoss()
 if debug:
     print("debug, simple cross entropy")
-    criterion = torch.nn.CrossEntropyLoss()
 else:
     assert whereIam != "wdtim719z"
     import convex_adversarial
@@ -111,7 +111,7 @@ for epoch in range(nbepoch):
     for _, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        if debug:
+        if debug or epoch == 1:
             outputs = net(inputs)
             loss = criterion(outputs, targets)
         else:
