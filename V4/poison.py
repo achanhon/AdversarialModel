@@ -5,9 +5,9 @@ import eval_feature
 def compute_poisonedmodel(
     batchprovider, proxymodel, net, trainsize, featuredim, nbclasses, inputsize, radius
 ):
-    ##############################################################################
-    # hacker modifies TRAIN data to make the model the more distant from proxy one#
-    ##############################################################################
+    ################################################################################
+    # hacker modifies TRAIN data to make the model the more distant from proxy one #
+    ################################################################################
 
     X = torch.Tensor(trainsize, inputsize, 32, 32).cuda()
     Y = torch.Tensor(trainsize).cuda().long()
@@ -29,16 +29,19 @@ def compute_poisonedmodel(
         poisonnedDataset, batch_size=64, shuffle=True, num_workers=2
     )
 
-    print("training on those data lead to poisoned model")
+    #################################################
+    # training on those data lead to poisoned model #
+    #################################################
     net.classifier = torch.nn.Identity()
     poisonedmodel = eval_feature.trainClassifierOnFrozenfeature(
         poisonnedloader, net, trainsize, featuredim, nbclasses
     )
 
+    # poisonnedDataset is exported for display/verification
     return (
         poisonedmodel,
         poisonnedDataset,
-    )  # poisonnedDataset is exported for display/verification
+    )
 
 
 def eval_robustness_poisonning(

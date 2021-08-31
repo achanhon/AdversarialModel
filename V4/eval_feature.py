@@ -35,9 +35,18 @@ def compute_accuracy(batchprovider, net, datasetsize):
         return accuracy.cpu().numpy()
 
 
+def compute_accuracyRAM(X, Y, net, flag="mean"):
+    XY = torch.torch.utils.data.TensorDataset(X, Y)
+    batchprovider = torch.utils.data.DataLoader(
+        testset, batch_size=64, shuffle=True, num_workers=2
+    )
+    if flag == "mean":
+        return compute_accuracy(batchprovider, net, X.shape[0])
+    else:
+        return compute_accuracy(batchprovider, net, 1)
+
+
 def fsgm_attack(net, x, y, radius=3.0 / 255):
-    if __debug__:
-        return x
     net.cuda()
     criterion = torch.nn.CrossEntropyLoss()
     x.requires_grad = True
@@ -53,8 +62,6 @@ def fsgm_attack(net, x, y, radius=3.0 / 255):
 
 def pgd_attack(net, x, y, radius=3.0 / 255, alpha=0.333, iters=40):
     alpha = alpha * radius
-    if __debug__:
-        return x
     net.cuda()
     criterion = torch.nn.CrossEntropyLoss()
     original_x = x
@@ -95,8 +102,6 @@ import numpy
 def trainClassifierOnFrozenfeature(
     batchprovider, encoder, datasetsize, featuredim, nbclasses
 ):
-    if __debug__:
-        return torch.nn.Linear(featuredim, nbclasses)
     encoder.cuda()
     print("extract features")
     X = numpy.zeros((datasetsize, featuredim))
