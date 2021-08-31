@@ -108,7 +108,7 @@ if __name__ == "__main__":
         download=True,
         transform=torchvision.transforms.ToTensor(),
     )
-    testsize = eval_feature.sizeDataset("cifar", False)
+    testsize = eval_feature.sizeDataset("cifar", True)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=64, shuffle=True, num_workers=2
     )
