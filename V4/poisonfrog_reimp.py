@@ -38,11 +38,11 @@ def find_candidate_for_collision(X, Y, encoder, xt, yt, radius):
     return candidate, candidateafterattack
 
 
-def eval_poisonfrog(X, Y, Xtest, Ytest, net, featuredim, nbclasses, radius=3.0 / 255):
+def eval_poisonfrog(X, Y, Xtest, Ytest, net, featuredim, radius=3.0 / 255):
     successful_attack = 0
     for i in range(Xtest.shape[0]):
         print(i, "/100")
-        xt, yt = Xtest[i].clone(), Ytest[i]
+        xt = Xtest[i].clone()
         xt = xt.view(1, xt.shape[0], xt.shape[1], xt.shape[2])
 
         net.classifier = torch.nn.Identity()
@@ -162,44 +162,6 @@ if __name__ == "__main__":
     )
     print(eval_feature.compute_accuracy(testloader, net, testsize))
 
-    quit()
-
-    print("collect 10 targets per classes")
-    Xt = [[] for i in range(10)]
-    for x, y in testloader:
-        for i in range(x.shape[0]):
-            Xt[y[i]].append(x[i].view(1, x.shape[1], x.shape[2], x.shape[3]))
-
-    net.cpu()
-    with torch.no_grad():
-        for i in range(10):
-            tmp = []
-            for x in Xt[i]:
-                z = net(x)[0]
-                z = torch.argmax(z)
-                if z == i:
-                    tmp.append(x)
-                    if len(tmp) == 10:
-                        Xt[i] = tmp
-                        break
-
-    tmp = []
-    for i in range(10):
-        tmp += Xt[i]
-    Xt = torch.cat(tmp, dim=0)
-    _, Yt = torch.max(net(Xt), dim=1)
-    print(Xt.shape[0])
-
-    print("change dataset shape")
-    Y = torch.zeros(trainsize)
-    X = torch.zeros((trainsize, 3, 32, 32))
-    i = 0
-    for x, y in trainloader:
-        lenx = x.shape[0]
-        X[i : i + lenx] = x
-        Y[i : i + lenx] = y
-        i += lenx
-
-    print("poison frog")
-    X, Y, Xt, Yt = X.cpu().float(), Y.cpu().long(), Xt.cpu().float(), Yt.cpu().long()
-    eval_poisonfrog(X, Y, Xt, Yt, net, 512, 10)
+    print("poison frog, check one shoot on 100 sample from class 0")
+    X, Y, Xt = X.cpu().float(), Y.cpu().long(), Xt.cpu().float()
+    eval_poisonfrog(X, Y, Xt, net, 512)
