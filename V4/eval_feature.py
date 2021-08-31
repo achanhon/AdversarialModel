@@ -119,8 +119,14 @@ def trainClassifierOnFrozenfeature(
     print("extract torch classifier")
     classifierNN = torch.nn.Linear(featuredim, nbclasses)
     with torch.no_grad():
-        classifierNN.weight.data = torch.Tensor(classifier.coef_)
-        classifierNN.bias.data = torch.Tensor(classifier.intercept_)
+        if nbclasses > 2:
+            classifierNN.weight.data = torch.Tensor(classifier.coef_)
+            classifierNN.bias.data = torch.Tensor(classifier.intercept_)
+        else:
+            classifierNN.weight.data[0] = -torch.Tensor(classifier.coef_)
+            classifierNN.bias.data[0] = -torch.Tensor(classifier.intercept_)
+            classifierNN.weight.data[1] = torch.Tensor(classifier.coef_)
+            classifierNN.bias.data[1] = torch.Tensor(classifier.intercept_)
     return classifierNN
 
 
