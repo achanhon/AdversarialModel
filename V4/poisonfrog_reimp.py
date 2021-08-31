@@ -23,8 +23,9 @@ def find_candidate_for_collision(X, encoder, zt, radius):
     bestgap, candidate, candidateafterattack = None, None, None
     for i in range(X.shape[0]):
         x = torch.unsqueeze(X[i].clone(), 0)
+        ori_x = x.clone()
 
-        for j in range(0):
+        for j in range(5):
             x.requires_grad = True
             opt = torch.optim.SGD([x], lr=1)
             z = net(x)
@@ -36,8 +37,8 @@ def find_candidate_for_collision(X, encoder, zt, radius):
             adv_x = x - radius / 3 * x.grad.sign()
             adv_x = torch.clamp(adv_x, min=0, max=1)
 
-            eta = torch.clamp(adv_x - X[i], min=-radius, max=radius)
-            x = (X[i] + eta).detach_()
+            eta = torch.clamp(adv_x - ori_x, min=-radius, max=radius)
+            x = (ori_x + eta).detach_()
 
         with torch.no_grad():
             z = net(x)
@@ -51,7 +52,7 @@ def find_candidate_for_collision(X, encoder, zt, radius):
     return candidate, candidateafterattack
 
 
-def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=3.0 / 255):
+def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=6.0 / 255):
     net.classifier = torch.nn.Identity()
     with torch.no_grad():
         ZT0 = net(XT0)
