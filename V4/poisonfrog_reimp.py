@@ -19,15 +19,10 @@ def trainBinary(X0, X1, net):
     return classifier
 
 
-def find_candidate_for_collision(X, Y, encoder, xt, yt, radius):
-    with torch.no_grad():
-        zt = encoder(xt)
-
+def find_candidate_for_collision(X, encoder, zt, radius):
     bestgap, candidate, candidateafterattack = None, None, None
     for i in range(X.shape[0]):
-        if Y[i] == yt:
-            continue
-        x = X[i].clone().view(xt.shape)
+        x = torch.unsqueeze(X[i].clone(), 0)
 
         for j in range(10):
             x.requires_grad = True
@@ -136,8 +131,6 @@ if __name__ == "__main__":
                 XT1.append(x[i])
     XT0, XT1 = torch.stack(XT0, dim=0), torch.stack(XT1, dim=0)
 
-    trainsize = X0.shape[0] + X1.shape[0]
-
     print("import pretrained model")
     net = torchvision.models.vgg13(pretrained=True)
     net.avgpool = torch.nn.Identity()
@@ -154,7 +147,7 @@ if __name__ == "__main__":
     accu1 = eval_feature.compute_accuracyRAM(
         XT1, torch.ones(XT1.shape[0]).long(), net, flag="sum"
     )
-    print(1.0 * (accu0 + accu1) / (XT0.shape[0] + XT1.shape[1]))
+    print(1.0 * (accu0 + accu1) / (XT0.shape[0] + XT1.shape[0]))
 
     print("poison frog: check one shoot attack on 100 good samples from class 0")
     net.cpu()

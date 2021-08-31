@@ -38,7 +38,7 @@ def compute_accuracy(batchprovider, net, datasetsize):
 def compute_accuracyRAM(X, Y, net, flag="mean"):
     XY = torch.torch.utils.data.TensorDataset(X, Y)
     batchprovider = torch.utils.data.DataLoader(
-        testset, batch_size=64, shuffle=True, num_workers=2
+        XY, batch_size=64, shuffle=True, num_workers=2
     )
     if flag == "mean":
         return compute_accuracy(batchprovider, net, X.shape[0])
