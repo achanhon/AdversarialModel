@@ -24,7 +24,7 @@ def find_candidate_for_collision(X, encoder, zt, radius):
     for i in range(X.shape[0]):
         x = torch.unsqueeze(X[i].clone(), 0)
 
-        for j in range(10):
+        for j in range(0):
             x.requires_grad = True
             opt = torch.optim.SGD([x], lr=1)
             z = net(x)
