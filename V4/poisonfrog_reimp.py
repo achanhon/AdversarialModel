@@ -3,16 +3,14 @@ import eval_feature
 
 
 def find_candidate_for_collision(X, Y, encoder, xt, yt, radius):
-    net.cpu()
     with torch.no_grad():
         zt = encoder(xt)
-        assert len(zt.shape) == 2
 
     bestgap, candidate, candidateafterattack = None, None, None
     for i in range(X.shape[0]):
         if Y[i] == yt:
             continue
-        x = torch.unsqueeze(X[i].clone())
+        x = X[i].clone().view(xt.shape)
 
         for j in range(3):
             x.requires_grad = True
@@ -42,11 +40,13 @@ def eval_poisonfrog(X, Y, Xtest, Ytest, net, featuredim, nbclasses, radius=3.0 /
     successful_attack = 0
     for i in range(Xtest.shape[0]):
         print(i, "/100")
-        xt, yt = torch.unsqueeze(Xtest[i].clone()), Ytest[i]
+        xt, yt = Xtest[i].clone(), Ytest[i]
+        xt = xt.view(1, xt.shape[0], xt.shape[1], xt.shape[2])
 
         net.classifier = torch.nn.Identity()
+        net.cpu()
         candidate, candidateafterattack = find_candidate_for_collision(
-            sampleprovider, encoder, xt, yt, radius
+            X, Y, net, xt, yt, radius
         )
 
         print("learn with X being modified")
@@ -65,7 +65,7 @@ def eval_poisonfrog(X, Y, Xtest, Ytest, net, featuredim, nbclasses, radius=3.0 /
 
         net.cpu()
         zt = net(xt)[0]
-        _, zt = torch.max(zt)
+        zt = torch.argmax(zt)
         if zt != yt:
             successful_attack += 1
             print("good shot")
@@ -96,59 +96,63 @@ if __name__ == "__main__":
     print("import dataset")
     trainset = torchvision.datasets.CIFAR10(
         root="./build/data",
-        train=False,  ### just to speed up the demo
+        train=False,  ### hack
         download=True,
         transform=torchvision.transforms.ToTensor(),
     )
+    trainsize = eval_feature.sizeDataset("cifar", False)
     testset = torchvision.datasets.CIFAR10(
         root="./build/data",
-        train=True,  ### just to speed up the demo
+        train=True,  ### hack
         download=True,
         transform=torchvision.transforms.ToTensor(),
     )
+    testsize = eval_feature.sizeDataset("cifar", False)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=64, shuffle=True, num_workers=2
     )
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=1, shuffle=True, num_workers=2
+        testset, batch_size=64, shuffle=True, num_workers=2
     )
 
     print("train classifier on the top of the encoder")
     net.classifier = eval_feature.trainClassifierOnFrozenfeature(
-        trainloader, net, eval_feature.sizeDataset("cifar", True), 512, 10
+        trainloader, net, trainsize, 512, 10
     )
     print(
         "accuracy",
-        eval_feature.compute_accuracy(
-            testloader, net, eval_feature.sizeDataset("cifar", False)
-        ),
+        eval_feature.compute_accuracy(testloader, net, testsize),
     )
 
     print("collect 10 targets per classes")
+    Xt = [[] for i in range(10)]
+    for x, y in testloader:
+        for i in range(x.shape[0]):
+            Xt[y[i]].append(x[i].view(1, x.shape[1], x.shape[2], x.shape[3]))
+
     net.cpu()
-    Xt, Yt = [], []
+    with torch.no_grad():
+        for i in range(10):
+            tmp = []
+            for x in Xt[i]:
+                z = net(x)[0]
+                z = torch.argmax(z)
+                if z == i:
+                    tmp.append(x)
+                    if len(tmp) == 10:
+                        Xt[i] = tmp
+                        break
+
+    tmp = []
     for i in range(10):
-        tmp = []
-        for x, y in testloader:
-            if y != i:
-                continue
-            z = net(x)[0]
-            _, z = torch.max(z)
-            if z == y:
-                tmp.append(x)
-                if len(tmp == 10):
-                    break
-
-        Xt += tmp
-        Yt += [i] * len(tmp)
-
-    Xt = torch.cat(Xt, dim=0)
-    Yt = torch.Tensor(Yt)
+        tmp += Xt[i]
+    Xt = torch.cat(tmp, dim=0)
+    _, Yt = torch.max(net(Xt), dim=1)
     print(Xt.shape[0])
 
     print("change dataset shape")
-    X = torch.zeros((datasetsize, 3, 32, 32))
-    Y = torch.zeros(datasetsize)
+    Y = torch.zeros(trainsize)
+    X = torch.zeros((trainsize, 3, 32, 32))
     i = 0
     for x, y in trainloader:
         lenx = x.shape[0]
@@ -157,4 +161,5 @@ if __name__ == "__main__":
         i += lenx
 
     print("poison frog")
+    X, Y, Xt, Yt = X.cpu(), Y.cpu(), Xt.cpu(), Yt.cpu()
     eval_poisonfrog(X, Y, Xt, Yt, net, 512, 10)
