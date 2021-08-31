@@ -50,7 +50,11 @@ def find_candidate_for_collision(X, encoder, zt, radius):
     return candidate, candidateafterattack
 
 
-def eval_poisonfrog(X0, X1, XT0, ZT0, net, featuredim, radius=3.0 / 255):
+def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=3.0 / 255):
+    net.classifier = torch.nn.Identity()
+    with torch.no_grad():
+        ZT0 = net(XT0)
+
     successful_attack = 0
     for i in range(100):
         print(i, "/100")
@@ -160,6 +164,5 @@ if __name__ == "__main__":
             if len(good) == 100:
                 break
     XT0 = XT0[good]
-    ZT0 = net(XT0)
 
-    eval_poisonfrog(X0, X1, XT0, ZT0, net, 512)
+    eval_poisonfrog(X0, X1, XT0, net, 512)
