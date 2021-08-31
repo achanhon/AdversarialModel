@@ -33,7 +33,8 @@ def find_candidate_for_collision(X, Y, encoder, xt, yt, radius):
 
         if bestgap is None or gap < bestgap:
             candidate, candidateafterattack = i, x
-
+    
+    print(bestgap)
     return candidate, candidateafterattack
 
 
