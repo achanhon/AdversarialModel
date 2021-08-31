@@ -44,6 +44,7 @@ def find_candidate_for_collision(X, encoder, zt, radius):
             gap = torch.sum((z - zt).abs())
 
         if bestgap is None or gap < bestgap:
+            bestgap = gap
             candidate, candidateafterattack = i, x
 
     print(bestgap)
@@ -73,7 +74,7 @@ def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=3.0 / 255):
 
         print("good shot ?")
         net.cpu()
-        zt = net(XT0[i])[0]
+        zt = net(torch.unsqueeze(XT0[i], 0))[0]
         zt = torch.argmax(zt)
         if zt == 1:
             successful_attack += 1
