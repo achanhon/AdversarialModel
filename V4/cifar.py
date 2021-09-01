@@ -89,8 +89,6 @@ for epoch in range(nbepoch):
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
-            if __debug__:
-                break
 
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
@@ -145,8 +143,6 @@ for epoch in range(nbepoch):
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
-            if __debug__:
-                break
 
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
@@ -201,8 +197,6 @@ for epoch in range(nbepoch):
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
-            if __debug__:
-                break
 
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
