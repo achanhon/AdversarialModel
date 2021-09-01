@@ -134,7 +134,7 @@ for i in range(X0.shape[0]):
             break
 XT0 = XT0[good]
 
-poisonfrog_reimp.eval_poisonfrog(X0, X1, XT0, net, 512, radius=12.0 / 255)
+poisonfrog_reimp.eval_poisonfrog(X0, X1, XT0, net, 512)
 
 print("================ PGD FEATURE ================")
 print("create feature")
@@ -226,4 +226,4 @@ for i in range(X0.shape[0]):
             break
 XT0 = XT0[good]
 
-poisonfrog_reimp.eval_poisonfrog(X0, X1, XT0, net, 512, radius=12.0 / 255)
+poisonfrog_reimp.eval_poisonfrog(X0, X1, XT0, net, 512)
