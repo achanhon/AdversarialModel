@@ -19,7 +19,7 @@ def trainBinary(X0, X1, net):
     return classifier
 
 
-def pgd_distance(net, x, z, radius=7.0 / 255, alpha=0.333, iters=50):
+def pgd_distance(net, x, z, radius=7.0 / 255, alpha=0.333, iters=40):
     alpha = alpha * radius
     net.cuda()
     original_x = x.clone()
@@ -59,7 +59,7 @@ def find_candidate_for_collision(X, encoder, zt, radius):
     return candidate, candidateafterattack
 
 
-def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=10.0 / 255):
+def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=7.0 / 255):
     net.classifier = torch.nn.Identity()
     with torch.no_grad():
         ZT0 = net(XT0)
