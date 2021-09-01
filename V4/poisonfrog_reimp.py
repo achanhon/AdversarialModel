@@ -48,7 +48,7 @@ def find_candidate_for_collision(X, encoder, zt, radius):
         x = pgd_distance(encoder, x, zt, radius=radius)
 
         with torch.no_grad():
-            z = net(x)
+            z = encoder(x)
             gap = (z - zt).abs()
             if bestgap is None or gap.sum() < bestgap:
                 bestgap = gap.sum()
