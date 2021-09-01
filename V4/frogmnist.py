@@ -16,7 +16,7 @@ torch.cuda.empty_cache()
 cudnn.benchmark = True
 
 import eval_feature
-import poisonfrog_reimpl
+import poisonfrog_reimp
 
 print("load data")
 
