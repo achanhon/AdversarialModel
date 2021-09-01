@@ -50,10 +50,9 @@ def find_candidate_for_collision(X, encoder, zt, radius):
         with torch.no_grad():
             z = net(x)
             gap = (z - zt).abs()
-            for j in range(64):
-                if bestgap is None or gap[j].sum() < bestgap:
-                    bestgap = gap[j].sum()
-                    candidate, candidateafterattack = i + j, x[j]
+            if bestgap is None or gap.sum() < bestgap:
+                bestgap = gap.sum()
+                candidate, candidateafterattack = i, x
 
     print("bestgap=", bestgap.cpu().numpy())
     return candidate, candidateafterattack
@@ -75,8 +74,8 @@ def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=7.0 / 255):
         )
 
         print("learn with one sample being modified")
-        xBACKUP = X1[candidate].clone()
-        X1[candidate] = candidateafterattack
+        xBACKUP = X1[candidate : candidate + 64].clone()
+        X1[candidate : candidate + 64] = candidateafterattack
         net.classifier = trainBinary(X0, X1, net)
 
         print("good shot ?")
@@ -89,7 +88,7 @@ def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=7.0 / 255):
         else:
             print(":-(")
 
-        X1[candidate] = xBACKUP
+        X1[candidate : candidate + 64] = xBACKUP
 
     print(successful_attack)
 
