@@ -19,40 +19,47 @@ def trainBinary(X0, X1, net):
     return classifier
 
 
+def pgd_distance(net, x, z, radius=7.0 / 255, alpha=0.333, iters=50):
+    alpha = alpha * radius
+    net.cuda()
+    original_x = x.clone()
+
+    for i in range(iters):
+        x.requires_grad = True
+        opt = torch.optim.Adam([x], lr=1)
+
+        loss = (net(x) - z).abs().sum()
+        opt.zero_grad()
+        loss.backward()
+
+        adv_x = x - alpha * x.grad.sign()
+        eta = torch.clamp(adv_x - original_x, min=-radius, max=radius)
+        x = (original_x + eta).detach_()
+    return torch.clamp(x, min=0, max=1)
+
+
 def find_candidate_for_collision(X, encoder, zt, radius):
     bestgap, candidate, candidateafterattack = None, None, None
-    for i in range(X.shape[0]):
-        x = torch.unsqueeze(X[i].clone(), 0)
-        ori_x = x.clone()
+    with torch.no_grad():
+        zt = torch.stack([zt] * 64, dim=0).clone().cuda()
 
-        for j in range(5):
-            x.requires_grad = True
-            opt = torch.optim.SGD([x], lr=1)
-            z = net(x)
-
-            gap = torch.sum((z - zt).abs())
-            opt.zero_grad()
-            gap.backward()
-
-            adv_x = x - radius / 3 * x.grad.sign()
-            adv_x = torch.clamp(adv_x, min=0, max=1)
-
-            eta = torch.clamp(adv_x - ori_x, min=-radius, max=radius)
-            x = (ori_x + eta).detach_()
+    for i in range(0, X.shape[0] - 64, 64):
+        x = X[i : i + 64].clone().cuda()
+        x = pgd_distance(encoder, x, zt, radius=radius)
 
         with torch.no_grad():
             z = net(x)
-            gap = torch.sum((z - zt).abs())
+            gap = (z - zt).abs()
+            for j in range(64):
+                if bestgap is None or gap[j].sum() < bestgap:
+                    bestgap = gap[j].sum()
+                    candidate, candidateafterattack = i + j, x[j]
 
-        if bestgap is None or gap < bestgap:
-            bestgap = gap
-            candidate, candidateafterattack = i, x
-
-    print(bestgap)
+    print("bestgap=", bestgap.cpu().numpy())
     return candidate, candidateafterattack
 
 
-def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=6.0 / 255):
+def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=10.0 / 255):
     net.classifier = torch.nn.Identity()
     with torch.no_grad():
         ZT0 = net(XT0)
@@ -62,13 +69,12 @@ def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=6.0 / 255):
         print(i, "/100")
 
         net.classifier = torch.nn.Identity()
-        net.cpu()
+        net.cuda()
         candidate, candidateafterattack = find_candidate_for_collision(
             X1, net, ZT0[i], radius
         )
 
         print("learn with one sample being modified")
-        net.cuda()
         xBACKUP = X1[candidate].clone()
         X1[candidate] = candidateafterattack
         net.classifier = trainBinary(X0, X1, net)
@@ -79,7 +85,7 @@ def eval_poisonfrog(X0, X1, XT0, net, featuredim, radius=6.0 / 255):
         zt = torch.argmax(zt)
         if zt == 1:
             successful_attack += 1
-            print("good shot")
+            print("good shot :-)")
         else:
             print(":-(")
 
