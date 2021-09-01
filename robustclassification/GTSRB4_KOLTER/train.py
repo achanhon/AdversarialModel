@@ -118,16 +118,15 @@ for epoch in range(nbepoch):
             with torch.no_grad():
                 outputs = net(inputs)
             loss, _ = convex_adversarial.robust_loss(net, 3.0 / 255, inputs, targets)
-            loss *= 0.05
 
         meanloss.append(loss.cpu().data.numpy())
 
-        if epoch > 75:
-            loss *= 0.1
+        if epoch > 0:
+            loss *= 0.0001
 
         optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
+        torch.nn.utils.clip_grad_norm_(net.parameters(), 1)
         optimizer.step()
 
         _, predicted = outputs.max(1)
