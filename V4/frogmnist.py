@@ -76,7 +76,7 @@ print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
 net.features = torch.nn.Sequential(ChannelHACK(), net.features)
 net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Linear(512, 100)
+net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
 net.train()
 
@@ -136,7 +136,8 @@ for x, y in testloader:
 XT0, XT1 = torch.stack(XT0, dim=0), torch.stack(XT1, dim=0)
 
 print("accuracy")
-net.classifier = poisonfrog_reimpl.trainBinary(X0, X1, net)
+net.classifier = torch.nn.Identity().cuda()
+net.classifier = poisonfrog_reimp.trainBinary(X0, X1, net)
 accu0 = eval_feature.compute_accuracyRAM(
     XT0, torch.zeros(XT0.shape[0]).long(), net, flag="sum"
 )
@@ -158,14 +159,14 @@ for i in range(X0.shape[0]):
             break
 XT0 = XT0[good]
 
-eval_poisonfrog(X0, X1, XT0, net, 512)
+poisonfrog_reimp.eval_poisonfrog(X0, X1, XT0, net, 512)
 
 print("================ PGD FEATURE ================")
 print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
 net.features = torch.nn.Sequential(ChannelHACK(), net.features)
 net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Linear(512, 100)
+net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
 net.train()
 
@@ -228,7 +229,8 @@ for x, y in testloader:
 XT0, XT1 = torch.stack(XT0, dim=0), torch.stack(XT1, dim=0)
 
 print("accuracy")
-net.classifier = poisonfrog_reimpl.trainBinary(X0, X1, net)
+net.classifier = torch.nn.Identity().cuda()
+net.classifier = poisonfrog_reimp.trainBinary(X0, X1, net)
 accu0 = eval_feature.compute_accuracyRAM(
     XT0, torch.zeros(XT0.shape[0]).long(), net, flag="sum"
 )
@@ -250,4 +252,4 @@ for i in range(X0.shape[0]):
             break
 XT0 = XT0[good]
 
-eval_poisonfrog(X0, X1, XT0, net, 512)
+poisonfrog_reimp.eval_poisonfrog(X0, X1, XT0, net, 512)
