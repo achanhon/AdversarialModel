@@ -39,7 +39,7 @@ def trainClassifierOnFrozenfeatureWithNoise(
             i += lenx
 
     print("add noise")
-    TODO
+    quit()
 
     print("solve SVM", datasetsize, featuredim)
     classifier = svm.LinearSVC()
