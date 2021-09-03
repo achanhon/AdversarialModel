@@ -7,12 +7,12 @@ whereIam = os.uname()[1]
 assert whereIam in ["ldtis706z", "wdtim719z", "super"]
 
 if whereIam == "ldtis706z":
-    os.system("python3 -u cifar.py | tee cifar.log")
-    os.system("python3 -u mnist.py | tee mnist.log")
-    os.system("python3 -u frogcifar.py | tee frogcifar.log")
+    os.system("python3 cifar.py")
+    os.system("python3 mnist.py")
+    os.system("python3 frogcifar.py")
+    os.system("python3 frogcifar.py")
 else:
-    os.system("/data/anaconda3/bin/python -u cifar.py | tee cifar.log")
-    os.system("/data/anaconda3/bin/python -u mnist.py | tee mnist.log")
-    os.system("/data/anaconda3/bin/python -u frogcifar.py | tee frogcifar.log")
-
-os.system("mv *.log build")
+    os.system("/data/anaconda3/bin/python cifar.py")
+    os.system("/data/anaconda3/bin/python mnist.py")
+    os.system("/data/anaconda3/bin/python frogcifar.py")
+    os.system("/data/anaconda3/bin/python frogcifar.py")
