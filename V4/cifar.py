@@ -91,7 +91,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.90 * total:
+    if correct > 0.95 * total:
         break
 
 print("eval feature")
@@ -145,7 +145,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.90 * total:
+    if correct > 0.95 * total:
         break
 
 print("eval feature")
@@ -199,7 +199,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.90 * total:
+    if correct > 0.95 * total:
         break
 
 print("eval feature")

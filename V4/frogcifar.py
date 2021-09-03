@@ -88,7 +88,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.90 * total:
+    if correct > 0.95 * total:
         break
 
 print("keep only class 0 and 1")
@@ -180,7 +180,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.90 * total:
+    if correct > 0.95 * total:
         break
 
 print("keep only class 0 and 1")
