@@ -63,7 +63,7 @@ import collections
 import random
 
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 16
 
@@ -91,7 +91,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.98 * total:
+    if correct > 0.90 * total:
         break
 
 print("eval feature")
@@ -114,9 +114,9 @@ import collections
 import random
 
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 64
+nbepoch = 128
 
 print("train")
 net.cuda()
@@ -145,7 +145,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.98 * total:
+    if correct > 0.90 * total:
         break
 
 print("eval feature")
@@ -168,9 +168,9 @@ import collections
 import random
 
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(net.parameters(), lr=0.00001)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 64
+nbepoch = 128
 
 print("train")
 net.cuda()
@@ -199,7 +199,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.98 * total:
+    if correct > 0.90 * total:
         break
 
 print("eval feature")
