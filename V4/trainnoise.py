@@ -18,6 +18,7 @@ cudnn.benchmark = True
 import eval_feature
 from sklearn import svm
 import numpy
+import random
 
 
 def trainClassifierOnFrozenfeatureWithNoise(
@@ -38,8 +39,10 @@ def trainClassifierOnFrozenfeatureWithNoise(
             Y[i : i + lenx] = y.cpu().numpy()
             i += lenx
 
-    print("add noise")
-    quit()
+    print("add label noise")
+    for i in range(X.shape[0]):
+        if random.randint(0, noise) == 0:
+            Y[i] = random.randint(0, nbclasses)
 
     print("solve SVM", datasetsize, featuredim)
     classifier = svm.LinearSVC()
