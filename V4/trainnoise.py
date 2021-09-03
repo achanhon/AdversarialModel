@@ -171,7 +171,7 @@ net.classifier = trainClassifierOnFrozenfeatureWithNoise(
 )
 print(
     "accuracy",
-    compute_accuracy(testloader, net, testset),
+    eval_feature.compute_accuracy(testloader, net, testsize),
 )
 
 
@@ -229,7 +229,7 @@ net.classifier = trainClassifierOnFrozenfeatureWithNoise(
 )
 print(
     "accuracy",
-    compute_accuracy(testloader, net, testset),
+    eval_feature.compute_accuracy(testloader, net, testsize),
 )
 
 
@@ -287,5 +287,5 @@ net.classifier = trainClassifierOnFrozenfeatureWithNoise(
 )
 print(
     "accuracy",
-    compute_accuracy(testloader, net, testset),
+    eval_feature.compute_accuracy(testloader, net, testsize),
 )
