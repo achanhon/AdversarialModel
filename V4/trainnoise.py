@@ -63,23 +63,47 @@ def trainClassifierOnFrozenfeatureWithNoise(
 
 
 print("load data")
-finetuneset = torchvision.datasets.CIFAR100(
+
+
+class ChannelHACK(torch.nn.Module):
+    def forward(self, x):
+        if len(x.shape) == 4 and x.shape[1] == 3:
+            xgray = 0.33333 * (x[:, 0, :, :] + x[:, 1, :, :] + x[:, 2, :, :])
+            xgray = xgray.view(x.shape[0], 1, x.shape[2], x.shape[3])
+            x = torch.cat([xgray, xgray, xgray], dim=1)
+            return x
+        if len(x.shape) == 4 and x.shape[1] == 1:
+            x = torch.cat([x, x, x], dim=1)
+            return x
+        if len(x.shape) == 3:
+            x = x.view(x.shape[0], 1, x.shape[1], x.shape[2])
+            x = torch.cat([x, x, x], dim=1)
+            return x
+        print("error", x.shape)
+        quit()
+
+
+mnisttransform = torchvision.transforms.Compose(
+    [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
+)
+
+finetuneset = torchvision.datasets.SVHN(
     root="./build/data",
-    train=True,
+    split="train",
     download=True,
     transform=torchvision.transforms.ToTensor(),
 )
-trainset = torchvision.datasets.CIFAR10(
+trainset = torchvision.datasets.MNIST(
     root="./build/data",
     train=True,
     download=True,
-    transform=torchvision.transforms.ToTensor(),
+    transform=mnisttransform,
 )
-testset = torchvision.datasets.CIFAR10(
+testset = torchvision.datasets.MNIST(
     root="./build/data",
     train=False,
     download=True,
-    transform=torchvision.transforms.ToTensor(),
+    transform=mnisttransform,
 )
 finetuneloader = torch.utils.data.DataLoader(
     finetuneset, batch_size=64, shuffle=True, num_workers=2
@@ -90,41 +114,15 @@ trainloader = torch.utils.data.DataLoader(
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=64, shuffle=True, num_workers=2
 )
-trainsize = eval_feature.sizeDataset("cifar", True)
-testsize = eval_feature.sizeDataset("cifar", False)
-
-
-print("load data")
-trainset = torchvision.datasets.CIFAR10(
-    root="./build/data",
-    train=True,
-    download=True,
-    transform=torchvision.transforms.ToTensor(),
-)
-testset = torchvision.datasets.CIFAR10(
-    root="./build/data",
-    train=False,
-    download=True,
-    transform=torchvision.transforms.ToTensor(),
-)
-finetuneloader = torch.utils.data.DataLoader(
-    finetuneset, batch_size=64, shuffle=True, num_workers=2
-)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=64, shuffle=True, num_workers=2
-)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=64, shuffle=True, num_workers=2
-)
-trainsize = eval_feature.sizeDataset("cifar", True)
-testsize = eval_feature.sizeDataset("cifar", False)
+trainsize = eval_feature.sizeDataset("mnist", True)
+testsize = eval_feature.sizeDataset("mnist", False)
 
 
 print("================ NAIVE FEATURE ================")
 print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Linear(512, 100)
+net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
 net.train()
 
@@ -179,7 +177,7 @@ print("================ FSGM FEATURE ================")
 print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Linear(512, 100)
+net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
 net.train()
 
@@ -237,7 +235,7 @@ print("================ PGD FEATURE ================")
 print("create feature")
 net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = torch.nn.Identity()
-net.classifier = torch.nn.Linear(512, 100)
+net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
 net.train()
 
