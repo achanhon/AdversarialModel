@@ -98,14 +98,32 @@ for epoch in range(nbepoch):
             loss = criterion(z, targets)
 
             lb, ub = convexnet.compute_bounds(method="IBP")
-            lbC = torch.zeros(8).cuda()
-            for i in range(8):
-                lbC[i] = lb[i][targets[i]]
-                ub[i][targets[i]] = -1000
-                ubC, _ = torch.max(ub, dim=1)
+            # "CROWN"
 
-            robust_ce = -(lbC - ubC).sum()
-            loss = 0.1 * loss + 0.9 * robust_ce
+            # upper_d = torch.scatter(torch.flatten(upper_d, -2), -1, torch.flatten(max_lower_index, -2), torch.flatten(values, -2)).view(upper_d.shape)
+            # RuntimeError: Expected object of backend CPU but got backend CUDA for argument #3 'index'
+
+            # "Forward"
+            # NotImplementedError: Function `bound_relax` of `BoundMaxPool()` is not supported yet. Please help to open an issue at https://github.com/KaidiXu/auto_LiRPA or implement this function in auto_LiRPA/bound_ops.py by yourself.
+
+            # CROWN-Optimized
+            # lb, ub = convexnet.compute_bounds(method="CROWN-Optimized")
+            #  File "/home/achanhon/github/auto_LiRPA/auto_LiRPA/bound_general.py", line 1363, in compute_bounds
+            #    bound_lower=bound_lower, bound_upper=False, return_A=return_A)
+            #  File "/home/achanhon/github/auto_LiRPA/auto_LiRPA/bound_general.py", line 952, in get_optimized_bounds
+            #    self.init_slope(x, share_slopes=opts['ob_alpha_share_slopes'], method=method, c=C)
+            #  File "/home/achanhon/github/auto_LiRPA/auto_LiRPA/bound_general.py", line 600, in init_slope
+            #    assert isinstance(x, tuple)
+
+            if lb.shape == (8, 4):
+                lbC = torch.zeros(8).cuda()
+                for i in range(8):
+                    lbC[i] = lb[i][targets[i]]
+                    ub[i][targets[i]] = -1000
+                    ubC, _ = torch.max(ub, dim=1)
+
+                robust_ce = (ubC - lbC).sum()
+                loss = 0.1 * loss + 0.9 * robust_ce
 
         meanloss.append(loss.cpu().data.numpy())
 
@@ -124,7 +142,6 @@ for epoch in range(nbepoch):
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
-            break
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
