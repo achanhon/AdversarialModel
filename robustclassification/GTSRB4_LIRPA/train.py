@@ -38,7 +38,21 @@ net = torchvision.models.vgg13(pretrained=True)
 net.avgpool = nn.Identity()
 net.classifier = None
 net.classifier = nn.Linear(512, 4)
-net = net.to(device)
+
+# final_name1 = net.classifier.output_name[0]
+dummy_input = torch.randn(2, 3, 32, 32)
+convexnet = auto_LiRPA.BoundedModule(
+    net, dummy_input, bound_opts={"relu": "same-slope"}, device="cuda"
+)
+
+convexnet_loss = auto_LiRPA.BoundedModule(
+    auto_LiRPA.CrossEntropyWrapper(net),
+    (dummy_input, torch.zeros(1).long()),
+    bound_opts={"relu": "same-slope", "loss_fusion": True},
+    device="cuda",
+)
+# final_name2 = convexnet_loss._modules[final_name1].output_name[0]
+
 if device == "cuda":
     torch.cuda.empty_cache()
     cudnn.benchmark = True
@@ -62,12 +76,27 @@ for epoch in range(nbepoch):
     for _, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        if epoch==0:
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
+        if epoch == 0:
+            output = convexnet_loss(inputs, labels)
+            regular_ce = torch.mean(torch.log(output))
         else:
-            lb, _ = model(method_opt="compute_bounds", x=inputs, C=targets, method="IBP", no_replicas=True)
-            loss = criterion(outputs, torch.zeros(targets.shape[0]).cuda())
+            eps = 1.0 / 255
+            data_max = torch.ones(inputs.shape)
+            data_min = torch.zeros(inputs.shape)
+            data_ub = torch.min(inputs + eps * data_max, data_max)
+            data_lb = torch.max(inputs - eps * data_max, data_min)
+
+            ptb = auto_LiRPA.PerturbationLpNorm(eps=eps, x_L=data_lb, x_U=data_ub)
+            x = auto_LiRPA.BoundedTensor(inputs, ptb)
+
+            lb, _ = auto_LiRPA.convexnet_loss(
+                method_opt="compute_bounds",
+                x=x,
+                C=targets,
+                method="IBP",
+                no_replicas=True,
+            )
+            robust_ce = criterion(-lb, torch.zeros(targets.shape[0]).cuda())
 
         meanloss.append(loss.cpu().data.numpy())
 
