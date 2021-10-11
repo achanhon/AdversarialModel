@@ -39,19 +39,10 @@ net.avgpool = nn.Identity()
 net.classifier = None
 net.classifier = nn.Linear(512, 4)
 
-# final_name1 = net.classifier.output_name[0]
-dummy_input = torch.randn(2, 3, 32, 32)
+dummy_input = torch.randn(2, 3, 32, 32).cuda()
 convexnet = auto_LiRPA.BoundedModule(
     net, dummy_input, bound_opts={"relu": "same-slope"}, device="cuda"
 )
-
-convexnet_loss = auto_LiRPA.BoundedModule(
-    auto_LiRPA.CrossEntropyWrapper(net),
-    (dummy_input, torch.zeros(1).long()),
-    bound_opts={"relu": "same-slope", "loss_fusion": True},
-    device="cuda",
-)
-# final_name2 = convexnet_loss._modules[final_name1].output_name[0]
 
 if device == "cuda":
     torch.cuda.empty_cache()
@@ -77,26 +68,20 @@ for epoch in range(nbepoch):
         inputs, targets = inputs.to(device), targets.to(device)
 
         if epoch == 0:
-            output = convexnet_loss(inputs, labels)
-            regular_ce = torch.mean(torch.log(output))
+            outputs = convexnet(inputs)
+            loss = criterion(outputs, targets)
         else:
             eps = 1.0 / 255
-            data_max = torch.ones(inputs.shape)
-            data_min = torch.zeros(inputs.shape)
+            data_max = torch.ones(inputs.shape).cuda()
+            data_min = torch.zeros(inputs.shape).cuda()
             data_ub = torch.min(inputs + eps * data_max, data_max)
             data_lb = torch.max(inputs - eps * data_max, data_min)
 
             ptb = auto_LiRPA.PerturbationLpNorm(eps=eps, x_L=data_lb, x_U=data_ub)
             x = auto_LiRPA.BoundedTensor(inputs, ptb)
 
-            lb, _ = auto_LiRPA.convexnet_loss(
-                method_opt="compute_bounds",
-                x=x,
-                C=targets,
-                method="IBP",
-                no_replicas=True,
-            )
-            robust_ce = criterion(-lb, torch.zeros(targets.shape[0]).cuda())
+            lb, _ = convexnet.compute_bounds(x=x, C=targets)
+            robust_ce = criterion(-lb, torch.zeros(targets.shape[0]).long().cuda())
 
         meanloss.append(loss.cpu().data.numpy())
 
@@ -108,12 +93,14 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
         optimizer.step()
 
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
+        with torch.no_grad():
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
+            break
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
