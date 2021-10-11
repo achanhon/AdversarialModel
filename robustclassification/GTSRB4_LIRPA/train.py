@@ -39,28 +39,6 @@ import torch.nn as nn
 # net.classifier = None
 # net.classifier = nn.Linear(512, 4)
 
-
-class WTF(torch.nn.Module):
-    def __init__(self):
-        super(WTF, self).__init__()
-        self.caca1 = torch.nn.MaxPool2d(kernel_size=4, stride=4)
-        self.caca2 = torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)
-        self.caca3 = torch.nn.ReLU()
-        self.caca4 = torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-        self.caca5 = torch.nn.ReLU()
-        self.caca6 = torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-        self.caca7 = torch.nn.ReLU()
-        self.caca8 = torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-        self.caca9 = torch.nn.MaxPool2d(kernel_size=8, stride=8)
-        self.caca10 = torch.nn.Flatten()
-        self.caca11 = torch.nn.Linear(64, 4)
-
-    def forward(self, x):
-        for i in range(1, 12):
-            x = self._modules["caca" + str(i)](x)
-        return x
-
-
 net = torch.nn.Sequential()
 net.add_module("caca1", torch.nn.MaxPool2d(kernel_size=4, stride=4))
 net.add_module("caca2", torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1))
@@ -74,8 +52,6 @@ net.add_module("caca9", torch.nn.MaxPool2d(kernel_size=8, stride=8))
 net.add_module("cac10", torch.nn.Flatten())
 net.add_module("cac11", torch.nn.Linear(64, 4))
 net = net.cuda()
-
-net = WTF().cuda()
 
 dummy_input = torch.randn(2, 3, 32, 32).cuda()
 convexnet = auto_LiRPA.BoundedModule(
@@ -119,21 +95,17 @@ for epoch in range(nbepoch):
             x = auto_LiRPA.BoundedTensor(inputs, ptb)
 
             z = convexnet(x)
+            loss = criterion(z, targets)
 
-            C = torch.zeros((8, 4)).cuda()
+            lb, ub = convexnet.compute_bounds(method="IBP")
+            lbC = torch.zeros(8).cuda()
             for i in range(8):
-                C[i][targets[i]] = 1
-            lb = convexnet.compute_bounds(C=C, method="IBP", bound_upper=False)
+                lbC[i] = lb[i][targets[i]]
+                ub[i][targets[i]] = -1000
+                ubC, _ = torch.max(ub, dim=1)
 
-            # lb = convexnet.compute_bounds(
-            #    x=(x, None),
-            #    C=C,
-            #    method="IBP",
-            #    bound_upper=False,
-            #    final_node_name="caca11",
-            # )
-            # method="ibp" -> crash parce que le last layer est pas le last
-            robust_ce = criterion(-lb, torch.zeros(targets.shape[0]).long().cuda())
+            robust_ce = -(lbC - ubC).sum()
+            loss = 0.1 * loss + 0.9 * robust_ce
 
         meanloss.append(loss.cpu().data.numpy())
 
