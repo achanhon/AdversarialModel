@@ -23,36 +23,35 @@ transform = transforms.Compose(
         transforms.ToTensor(),
     ]
 )
-
+batchsize = 32
 trainset = torchvision.datasets.ImageFolder(
     root="/data/GTSRB_misenforme/train", transform=transform
 )
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=8, shuffle=True, num_workers=2
+    trainset, batch_size=batchsize, shuffle=True, num_workers=2
 )
 
 print("load model")
 import torch.nn as nn
 
-# net = torchvision.models.vgg13(pretrained=True)
-# net.avgpool = nn.Identity()
-# net.classifier = None
-# net.classifier = nn.Linear(512, 4)
+net = torchvision.models.vgg13(pretrained=True)
+net.avgpool = nn.Identity()
+net.classifier = None
+net.classifier = nn.Linear(512, 4)
+# net = torch.nn.Sequential()
+# net.add_module("caca1", torch.nn.MaxPool2d(kernel_size=4, stride=4))
+# net.add_module("caca2", torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1))
+# net.add_module("caca3", torch.nn.ReLU())
+# net.add_module("caca4", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
+# net.add_module("caca5", torch.nn.ReLU())
+# net.add_module("caca6", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
+# net.add_module("caca7", torch.nn.ReLU())
+# net.add_module("caca8", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
+# net.add_module("caca9", torch.nn.MaxPool2d(kernel_size=8, stride=8))
+# net.add_module("cac10", torch.nn.Flatten())
+# net.add_module("cac11", torch.nn.Linear(64, 4))
 
-net = torch.nn.Sequential()
-net.add_module("caca1", torch.nn.MaxPool2d(kernel_size=4, stride=4))
-net.add_module("caca2", torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1))
-net.add_module("caca3", torch.nn.ReLU())
-net.add_module("caca4", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
-net.add_module("caca5", torch.nn.ReLU())
-net.add_module("caca6", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
-net.add_module("caca7", torch.nn.ReLU())
-net.add_module("caca8", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
-net.add_module("caca9", torch.nn.MaxPool2d(kernel_size=8, stride=8))
-net.add_module("cac10", torch.nn.Flatten())
-net.add_module("cac11", torch.nn.Linear(64, 4))
 net = net.cuda()
-
 dummy_input = torch.randn(2, 3, 32, 32).cuda()
 convexnet = auto_LiRPA.BoundedModule(
     net, dummy_input, bound_opts={"relu": "same-slope"}, device="cuda"
@@ -82,8 +81,8 @@ for epoch in range(nbepoch):
         inputs, targets = inputs.to(device), targets.to(device)
 
         if epoch == 0:
-            outputs = convexnet(inputs)
-            loss = criterion(outputs, targets)
+            z = convexnet(inputs)
+            loss = criterion(z, targets)
         else:
             eps = 1.0 / 255
             data_max = torch.ones(inputs.shape).cuda()
@@ -115,15 +114,18 @@ for epoch in range(nbepoch):
             #  File "/home/achanhon/github/auto_LiRPA/auto_LiRPA/bound_general.py", line 600, in init_slope
             #    assert isinstance(x, tuple)
 
-            if lb.shape == (8, 4):
-                lbC = torch.zeros(8).cuda()
-                for i in range(8):
+            if lb.shape == (batchsize, 4):
+                lbC = torch.zeros(batchsize).cuda()
+                for i in range(batchsize):
                     lbC[i] = lb[i][targets[i]]
                     ub[i][targets[i]] = -1000
                     ubC, _ = torch.max(ub, dim=1)
 
-                robust_ce = (ubC - lbC).sum()
-                loss = 0.1 * loss + 0.9 * robust_ce
+                robust_ce = (ubC - lbC).mean()
+                if epoch == 1:
+                    loss = loss + 0.000001 * robust_ce
+                else:
+                    loss = loss + 0.001 * robust_ce
 
         meanloss.append(loss.cpu().data.numpy())
 
@@ -132,11 +134,11 @@ for epoch in range(nbepoch):
 
         optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
+        torch.nn.utils.clip_grad_norm_(net.parameters(), 1)
         optimizer.step()
 
         with torch.no_grad():
-            _, predicted = outputs.max(1)
+            _, predicted = z.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
@@ -145,6 +147,6 @@ for epoch in range(nbepoch):
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.98 * total:
+    if correct > 0.98 * total and epoch > 1:
         quit()
     sleep(3)
