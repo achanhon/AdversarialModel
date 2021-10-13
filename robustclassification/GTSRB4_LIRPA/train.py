@@ -23,7 +23,7 @@ transform = transforms.Compose(
         transforms.ToTensor(),
     ]
 )
-batchsize = 32
+batchsize = 2
 trainset = torchvision.datasets.ImageFolder(
     root="/data/GTSRB_misenforme/train", transform=transform
 )
@@ -34,22 +34,22 @@ trainloader = torch.utils.data.DataLoader(
 print("load model")
 import torch.nn as nn
 
-net = torchvision.models.vgg13(pretrained=True)
-net.avgpool = nn.Identity()
-net.classifier = None
-net.classifier = nn.Linear(512, 4)
-# net = torch.nn.Sequential()
-# net.add_module("caca1", torch.nn.MaxPool2d(kernel_size=4, stride=4))
-# net.add_module("caca2", torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1))
-# net.add_module("caca3", torch.nn.ReLU())
-# net.add_module("caca4", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
-# net.add_module("caca5", torch.nn.ReLU())
-# net.add_module("caca6", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
-# net.add_module("caca7", torch.nn.ReLU())
-# net.add_module("caca8", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
-# net.add_module("caca9", torch.nn.MaxPool2d(kernel_size=8, stride=8))
-# net.add_module("cac10", torch.nn.Flatten())
-# net.add_module("cac11", torch.nn.Linear(64, 4))
+#net = torchvision.models.vgg13(pretrained=True)
+#net.avgpool = nn.Identity()
+#net.classifier = None
+#net.classifier = nn.Linear(512, 4)
+net = torch.nn.Sequential()
+net.add_module("caca1", torch.nn.MaxPool2d(kernel_size=4, stride=4))
+net.add_module("caca2", torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1))
+net.add_module("caca3", torch.nn.ReLU())
+net.add_module("caca4", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
+net.add_module("caca5", torch.nn.ReLU())
+net.add_module("caca6", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
+net.add_module("caca7", torch.nn.ReLU())
+net.add_module("caca8", torch.nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1))
+net.add_module("caca9", torch.nn.MaxPool2d(kernel_size=8, stride=8))
+net.add_module("cac10", torch.nn.Flatten())
+net.add_module("cac11", torch.nn.Linear(64, 4))
 
 net = net.cuda()
 dummy_input = torch.randn(2, 3, 32, 32).cuda()
@@ -96,7 +96,7 @@ for epoch in range(nbepoch):
             z = convexnet(x)
             loss = criterion(z, targets)
 
-            lb, ub = convexnet.compute_bounds(method="IBP")
+            lb, ub = convexnet.compute_bounds(method="CROWN")
             # "CROWN"
 
             # upper_d = torch.scatter(torch.flatten(upper_d, -2), -1, torch.flatten(max_lower_index, -2), torch.flatten(values, -2)).view(upper_d.shape)
