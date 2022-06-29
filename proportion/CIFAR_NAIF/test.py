@@ -34,8 +34,6 @@ with torch.no_grad():
             for j in range(10):
                 cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
 
-        break
-
     print("test cm", cm)
     total = torch.sum(cm)
     accuracy = torch.sum(torch.diagonal(cm))
