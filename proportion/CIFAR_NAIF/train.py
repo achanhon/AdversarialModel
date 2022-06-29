@@ -14,9 +14,9 @@ else:
 
 print("load data")
 raw = torchvision.transforms.ToTensor()
-root, Tr = "./build/data", True
+root, Tr, Bs = "./build/data", True, 128
 trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=raw)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
 RESNET = True
@@ -34,7 +34,6 @@ net.train()
 print("train setting")
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-batchsize = 4
 nbepoch = 10
 
 print("train")
@@ -49,7 +48,7 @@ for epoch in range(nbepoch):
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         printloss[0] += loss.detach()
-        printloss[1] += batchsize
+        printloss[1] += Bs
 
         if epoch > 5:
             loss *= 0.1
@@ -60,17 +59,14 @@ for epoch in range(nbepoch):
         optimizer.step()
 
         _, predicted = outputs.max(1)
-        total += batchsize
+        total += Bs
         correct += (predicted == targets).float().sum()
 
-        if printloss[1] > 100:
+        if printloss[1] > 2000:
             print("loss=", printloss[0] / printloss[1])
             printloss = torch.zeros(2).cuda()
-            break
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
-        quit()
-    else:
         quit()
