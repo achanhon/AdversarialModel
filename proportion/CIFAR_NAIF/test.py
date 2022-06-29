@@ -1,35 +1,42 @@
-print("TEST.PY")
 import torch
-import torch.backends.cudnn as cudnn
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
 import torchvision
 
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+    torch.backends.cudnn.benchmark = True
+else:
+    print("no cuda")
+    quit()
+
+
 print("load data")
-testset = torchvision.datasets.CIFAR10(
-    root="./build/data",
-    train=False,
-    download=True,
-    transform=torchvision.transforms.ToTensor(),
-)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=64, shuffle=False, num_workers=2
-)
+print("load data")
+raw = torchvision.transforms.ToTensor()
+root, Tr, Fl, Bs = "./build/data", True, False, 128
+testset = torchvision.datasets.CIFAR10(root=root, train=Fl, download=Tr, transform=raw)
+testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=False)
 
 print("load model")
 net = torch.load("build/model.pth")
-net = net.to(device)
+net = net.cuda()
 net.eval()
-if device == "cuda":
-    torch.cuda.empty_cache()
-    cudnn.benchmark = True
 
-print("do test")
-import sys
+print("test")
+with torch.no_grad():
+    cm = torch.zeros(10, 10).cuda()
+    for inputs, targets in testloader:
+        inputs, targets = inputs.cuda(), targets.cuda()
 
-sys.path.append("..")
-import computeaccuracy
+        outputs = net(inputs)
+        _, predicted = outputs.max(1)
 
-clean_accuracy, robust_accuracy = computeaccuracy.accuracy(net, testloader)
-print("clean_accuracy=", clean_accuracy, "robust_accuracy=", robust_accuracy)
+        for i in range(10):
+            for j in range(10):
+                cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
+
+        break
+
+    print("test cm", cm)
+    total = torch.sum(cm)
+    accuracy = torch.sum(torch.diagonal(cm))
+    print("test accuracy=", 100.0 * accuracy / total)
