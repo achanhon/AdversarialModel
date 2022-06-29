@@ -23,18 +23,18 @@ RESNET = True
 if RESNET:
     net = torchvision.models.resnet50(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.classifier = nn.Linear(2048, 10)
+    net.classifier = torch.nn.Linear(2048, 10)
 else:
     net = torchvision.models.vgg16(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.classifier = nn.Linear(512, 10)
+    net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
 net.train()
 
 print("train setting")
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-batchsize = 32
+batchsize = 4
 nbepoch = 10
 
 print("train")
@@ -44,7 +44,7 @@ for epoch in range(nbepoch):
     total, correct = torch.zeros(1).cuda(), torch.zeros(1).cuda()
     printloss = torch.zeros(2).cuda()
     for inputs, targets in trainloader:
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
         loss = criterion(outputs, targets)
@@ -63,11 +63,14 @@ for epoch in range(nbepoch):
         total += batchsize
         correct += (predicted == targets).float().sum()
 
-        if printloss[1] > 500:
+        if printloss[1] > 100:
             print("loss=", printloss[0] / printloss[1])
             printloss = torch.zeros(2).cuda()
+            break
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
+        quit()
+    else:
         quit()
