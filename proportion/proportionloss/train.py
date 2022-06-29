@@ -10,7 +10,7 @@ else:
 
 print("load data")
 raw = torchvision.transforms.ToTensor()
-root, Tr, Bs = "./build/data", True, 128
+root, Tr, Bs = "./build/data", True, 128*2
 trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=raw)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
@@ -30,7 +30,7 @@ net.train()
 print("train setting")
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-nbepoch = 10
+nbepoch = 20
 
 print("train")
 for epoch in range(nbepoch):
@@ -42,11 +42,20 @@ for epoch in range(nbepoch):
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
-        loss = criterion(outputs, targets)
+        primaryloss = criterion(outputs, targets)
+        
+        secondaryloss = torch.zeros(1).cuda()
+        estimatedensity = torch.nn.functional.softmax(outputs,dim=1)
+        estimatedensity = torch.sum(estimatedensity,dim=0)
+        
+        truedensity = torch.zeros(10).cuda()
+        
+        
+        
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
-        if epoch > 5:
+        if epoch > 10:
             loss *= 0.1
 
         optimizer.zero_grad()
