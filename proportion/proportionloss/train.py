@@ -10,7 +10,7 @@ else:
 
 print("load data")
 raw = torchvision.transforms.ToTensor()
-root, Tr, Bs = "./build/data", True, 128*2
+root, Tr, Bs = "./build/data", True, 8
 trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=raw)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
@@ -43,15 +43,17 @@ for epoch in range(nbepoch):
 
         outputs = net(inputs)
         primaryloss = criterion(outputs, targets)
-        
-        secondaryloss = torch.zeros(1).cuda()
-        estimatedensity = torch.nn.functional.softmax(outputs,dim=1)
-        estimatedensity = torch.sum(estimatedensity,dim=0)
-        
+
+        estimatedensity = torch.nn.functional.softmax(outputs * 0.1, dim=1)
+        estimatedensity = torch.sum(estimatedensity, dim=0)
+
         truedensity = torch.zeros(10).cuda()
-        
-        
-        
+        for i in range(10):
+            truedensity[i] = (targets == i).float().sum()
+
+        secondaryloss = torch.nn.KLDivLoss(estimatedensity, truedensity)
+
+        loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
