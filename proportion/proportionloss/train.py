@@ -27,7 +27,7 @@ trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transf
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
-backbone = "vgg13"
+backbone = "resnet34"
 assert backbone in ["resnet50", "resnet34", "vgg13", "vgg16"]
 if "resnet" in backbone:
     if backbone == "resnet50":
