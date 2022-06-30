@@ -9,9 +9,21 @@ else:
     quit()
 
 print("load data")
-raw = torchvision.transforms.ToTensor()
+mode = "withaugmentation"
+if mode == "raw":
+    aug = torchvision.transforms.ToTensor()
+else:
+    aug = torchvision.transforms.Compose(
+        [
+            torchvision.transforms.RandomResizedCrop(32),
+            torchvision.transforms.RandomRotation(10),
+            torchvision.transforms.RandomHorizontalFlip(0.5),
+            torchvision.transforms.ToTensor(),
+        ]
+    )
+
 root, Tr, Bs = "./build/data", True, 256
-trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=raw)
+trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=aug)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
