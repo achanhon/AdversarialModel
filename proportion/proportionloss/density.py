@@ -18,11 +18,11 @@ def labelsTOdensity(targets, nbclasses=10):
     return truedensity
 
 
-def kl_and_l2(estimatedensity, truedensity):
+def extendedKL(estimatedensity, truedensity):
     kl = torch.nn.functional.kl_div(estimatedensity, truedensity)
     kl = torch.nn.functional.relu(kl)
     diff = estimatedensity - truedensity
-    return kl + torch.sum(diff * diff)
+    return kl + torch.sum(diff * diff) + diff.abs().sum()
 
 
 def confusionmatrixTOdensity(cm):
@@ -31,10 +31,6 @@ def confusionmatrixTOdensity(cm):
 
     estimatedensity = cm.sum(dim=1) / total
     truedensity = cm.sum(dim=0) / total
+    out = extendedKL(estimatedensity, truedensity)
 
-    return (
-        accuracy,
-        kl_and_l2(estimatedensity, truedensity),
-        estimatedensity,
-        truedensity,
-    )
+    return accuracy, out, estimatedensity, truedensity
