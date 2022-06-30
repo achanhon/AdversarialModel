@@ -27,7 +27,7 @@ trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transf
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
-backbone = "vgg13"
+backbone = "resnet34"
 assert backbone in ["resnet50", "resnet34", "vgg13", "vgg16"]
 if "resnet" in backbone:
     if backbone == "resnet50":
@@ -35,7 +35,10 @@ if "resnet" in backbone:
     else:
         net = torchvision.models.resnet34(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.fc = torch.nn.Linear(2048, 10)
+    if backbone == "resnet50":
+        net.fc = torch.nn.Linear(2048, 10)
+    else:
+        net.fc = torch.nn.Linear(512, 10)
 else:
     if backbone == "vgg13":
         net = torchvision.models.vgg13(pretrained=True)
@@ -65,7 +68,7 @@ for epoch in range(nbepoch):
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
-        if epoch > 20:
+        if epoch > nbepoch // 2:
             loss *= 0.1
 
         optimizer.zero_grad()

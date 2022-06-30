@@ -75,7 +75,7 @@ for epoch in range(nbepoch):
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
-        if epoch > 10:
+        if epoch > nbepoch // 2:
             loss *= 0.1
 
         optimizer.zero_grad()
