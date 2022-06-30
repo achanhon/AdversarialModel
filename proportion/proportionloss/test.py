@@ -41,6 +41,6 @@ with torch.no_grad():
 
     estimatedensity = cm.sum(dim=1) / total
     truedensity = cm.sum(dim=0) / total
-    print("predicted density", estimatedensity)
-    print("true density", truedensity)
+    print("predicted density", estimatedensity, estimatedensity.sum())
+    print("true density", truedensity, truedensity.sum())
     print(torch.nn.functional.kl_div(estimatedensity, truedensity))
