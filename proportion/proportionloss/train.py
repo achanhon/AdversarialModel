@@ -69,7 +69,7 @@ for epoch in range(nbepoch):
 
         estimatedensity = density.logitTOdensity(outputs)
         truedensity = density.labelsTOdensity(targets)
-        secondaryloss = density.kl_and_l2(estimatedensity, secondaryloss)
+        secondaryloss = density.kl_and_l2(estimatedensity, truedensity)
 
         loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()
