@@ -39,6 +39,7 @@ for epoch in range(nbepoch):
     total, correct = torch.zeros(1).cuda(), torch.zeros(1).cuda()
     printloss = torch.zeros(2).cuda()
     for inputs, targets in trainloader:
+        Bs = targets.shape[0]
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
