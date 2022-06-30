@@ -55,7 +55,7 @@ for epoch in range(nbepoch):
         assert torch.abs(truedensity.sum() - 1) < 0.0001
 
         secondaryloss = torch.nn.functional.kl_div(estimatedensity, truedensity)
-        secondaryloss = torch.nn.functional.ReLU(secondaryloss + 0.01)
+        secondaryloss = torch.nn.functional.relu(secondaryloss + 0.01)
 
         loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()
