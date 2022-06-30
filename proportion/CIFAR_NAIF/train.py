@@ -18,7 +18,6 @@ else:
             torchvision.transforms.RandomResizedCrop(32),
             torchvision.transforms.RandomRotation(10),
             torchvision.transforms.RandomHorizontalFlip(0.5),
-            torchvision.transforms.RandomEqualize(0.1),
             torchvision.transforms.ToTensor(),
         ]
     )
