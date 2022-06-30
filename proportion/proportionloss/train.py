@@ -52,7 +52,9 @@ for epoch in range(nbepoch):
         for i in range(10):
             truedensity[i] = (targets == i).float().sum() / Bs
 
-        secondaryloss = torch.nn.functional.kl_div(estimatedensity, truedensity)
+        kl = torch.nn.functional.kl_div(estimatedensity, truedensity)
+        kl = torch.nn.functional.relu(kl)
+        secondaryloss = kl + torch.abs(estimatedensity - truedensity).sum()
 
         loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()

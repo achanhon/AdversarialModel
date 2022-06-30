@@ -38,3 +38,11 @@ with torch.no_grad():
     total = torch.sum(cm)
     accuracy = torch.sum(torch.diagonal(cm))
     print("test accuracy=", 100.0 * accuracy / total)
+
+    estimatedensity = cm.sum(dim=1) / total
+    truedensity = cm.sum(dim=0) / total
+    print("predicted density", estimatedensity, estimatedensity.sum())
+    print("true density", truedensity, truedensity.sum())
+    kl = torch.nn.functional.kl_div(estimatedensity, truedensity)
+    kl = torch.nn.functional.relu(kl)
+    print(kl + torch.abs(estimatedensity - truedensity).sum())
