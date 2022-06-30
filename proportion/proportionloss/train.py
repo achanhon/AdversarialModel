@@ -45,11 +45,11 @@ for epoch in range(nbepoch):
         primaryloss = criterion(outputs, targets)
 
         estimatedensity = torch.nn.functional.softmax(outputs * 0.1, dim=1)
-        estimatedensity = torch.sum(estimatedensity, dim=0)
+        estimatedensity = torch.sum(estimatedensity, dim=0) / Bs
 
         truedensity = torch.zeros(10).cuda()
         for i in range(10):
-            truedensity[i] = (targets == i).float().sum()
+            truedensity[i] = (targets == i).float().sum() / Bs
 
         secondaryloss = torch.nn.functional.kl_div(estimatedensity, truedensity)
 
