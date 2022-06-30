@@ -15,7 +15,7 @@ trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transf
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
-RESNET = True
+RESNET = False
 if RESNET:
     net = torchvision.models.resnet50(pretrained=True)
     net.avgpool = torch.nn.Identity()
@@ -52,13 +52,7 @@ for epoch in range(nbepoch):
         for i in range(10):
             truedensity[i] = (targets == i).float().sum() / Bs
 
-        if torch.abs(estimatedensity.sum() - 1) < 0.0001:
-            print(estimatedensity.sum())
-        assert torch.abs(estimatedensity.sum() - 1) < 0.0001
-        assert torch.abs(truedensity.sum() - 1) < 0.0001
-
         secondaryloss = torch.nn.functional.kl_div(estimatedensity, truedensity)
-        secondaryloss = torch.nn.functional.relu(secondaryloss + 0.01)
 
         loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()

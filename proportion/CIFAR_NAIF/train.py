@@ -15,7 +15,7 @@ trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transf
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
-RESNET = True
+RESNET = False
 if RESNET:
     net = torchvision.models.resnet50(pretrained=True)
     net.avgpool = torch.nn.Identity()
