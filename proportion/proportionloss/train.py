@@ -44,21 +44,25 @@ for epoch in range(nbepoch):
         outputs = net(inputs)
         primaryloss = criterion(outputs, targets)
 
-        estimatedensity = torch.nn.functional.softmax(outputs * 0.1, dim=1)
+        estimatedensity = torch.nn.functional.softmax(outputs, dim=1)
         estimatedensity = torch.sum(estimatedensity, dim=0) / Bs
 
         truedensity = torch.zeros(10).cuda()
         for i in range(10):
             truedensity[i] = (targets == i).float().sum() / Bs
 
+        assert torch.abs(estimatedensity.sum() - 1) < 0.0001
+        assert torch.abs(truedensity.sum() - 1) < 0.0001
+
         secondaryloss = torch.nn.functional.kl_div(estimatedensity, truedensity)
+        secondaryloss = torch.nn.functional.ReLU(secondaryloss + 0.01)
 
         loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
-        if epoch > 10:
-            loss *= 0.1
+        if epoch > 5:
+            loss = 0.1 * primaryloss + 10 * secondaryloss
 
         optimizer.zero_grad()
         loss.backward()
