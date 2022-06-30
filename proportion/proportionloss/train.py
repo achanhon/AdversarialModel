@@ -60,8 +60,8 @@ for epoch in range(nbepoch):
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
-        if epoch > 5:
-            loss = 0.1 * primaryloss + 10 * secondaryloss
+        if epoch > 10:
+            loss *= 0.1
 
         optimizer.zero_grad()
         loss.backward()
