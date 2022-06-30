@@ -21,7 +21,7 @@ if RESNET:
     net.avgpool = torch.nn.Identity()
     net.fc = torch.nn.Linear(2048, 10)
 else:
-    net = torchvision.models.vgg16(pretrained=True)
+    net = torchvision.models.vgg13(pretrained=True)
     net.avgpool = torch.nn.Identity()
     net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
