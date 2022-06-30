@@ -15,13 +15,20 @@ trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transf
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
-RESNET = False
-if RESNET:
-    net = torchvision.models.resnet50(pretrained=True)
+backbone = "vgg13"
+assert backbone in ["resnet50", "resnet34", "vgg13", "vgg16"]
+if "resnet" in backbone:
+    if backbone == "resnet50":
+        net = torchvision.models.resnet50(pretrained=True)
+    else:
+        net = torchvision.models.resnet34(pretrained=True)
     net.avgpool = torch.nn.Identity()
     net.fc = torch.nn.Linear(2048, 10)
 else:
-    net = torchvision.models.vgg13(pretrained=True)
+    if backbone == "vgg13":
+        net = torchvision.models.vgg13(pretrained=True)
+    else:
+        net = torchvision.models.vgg16(pretrained=True)
     net.avgpool = torch.nn.Identity()
     net.classifier = torch.nn.Linear(512, 10)
 net = net.cuda()
