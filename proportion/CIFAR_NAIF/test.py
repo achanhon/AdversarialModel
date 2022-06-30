@@ -36,7 +36,7 @@ with torch.no_grad():
                 cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
 
     print("test cm", cm)
-    accuracy, kll2, estimated, trued = density.confusionmatrixTOdensity(cm)
+    accuracy, KL, estimated, trued = density.confusionmatrixTOdensity(cm)
     print("test accuracy=", accuracy)
-    print("test divergence=", kll2)
+    print("test divergence=", KL)
     print(estimated, trued)
