@@ -51,6 +51,8 @@ for epoch in range(nbepoch):
         for i in range(10):
             truedensity[i] = (targets == i).float().sum() / Bs
 
+        if torch.abs(estimatedensity.sum() - 1) < 0.0001:
+            print(estimatedensity.sum())
         assert torch.abs(estimatedensity.sum() - 1) < 0.0001
         assert torch.abs(truedensity.sum() - 1) < 0.0001
 
