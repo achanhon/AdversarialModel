@@ -35,7 +35,10 @@ if "resnet" in backbone:
     else:
         net = torchvision.models.resnet34(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.fc = torch.nn.Linear(2048, 10)
+    if backbone == "resnet50":
+        net.fc = torch.nn.Linear(2048, 10)
+    else:
+        net.fc = torch.nn.Linear(512, 10)
 else:
     if backbone == "vgg13":
         net = torchvision.models.vgg13(pretrained=True)
