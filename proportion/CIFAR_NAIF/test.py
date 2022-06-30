@@ -1,5 +1,6 @@
 import torch
 import torchvision
+import density
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
@@ -12,7 +13,7 @@ else:
 print("load data")
 print("load data")
 raw = torchvision.transforms.ToTensor()
-root, Tr, Fl, Bs = "./build/data", True, False, 128
+root, Tr, Fl, Bs = "./build/data", True, False, 256
 testset = torchvision.datasets.CIFAR10(root=root, train=Fl, download=Tr, transform=raw)
 testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=False)
 
@@ -35,14 +36,7 @@ with torch.no_grad():
                 cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
 
     print("test cm", cm)
-    total = torch.sum(cm)
-    accuracy = torch.sum(torch.diagonal(cm))
-    print("test accuracy=", 100.0 * accuracy / total)
-
-    estimatedensity = cm.sum(dim=1) / total
-    truedensity = cm.sum(dim=0) / total
-    print("predicted density", estimatedensity, estimatedensity.sum())
-    print("true density", truedensity, truedensity.sum())
-    kl = torch.nn.functional.kl_div(estimatedensity, truedensity)
-    kl = torch.nn.functional.relu(kl)
-    print(kl + torch.abs(estimatedensity - truedensity).sum())
+    accuracy, kll2, estimated, trued = density.confusionmatrixTOdensity(cm)
+    print("test accuracy=", accuracy)
+    print("test divergence=", kll2)
+    print(estimated, trued)

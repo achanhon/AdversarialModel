@@ -1,5 +1,6 @@
 import torch
 import torchvision
+import density
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
@@ -61,22 +62,14 @@ for epoch in range(nbepoch):
     total, correct = torch.zeros(1).cuda(), torch.zeros(1).cuda()
     printloss = torch.zeros(2).cuda()
     for inputs, targets in trainloader:
-        Bs = targets.shape[0]
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
         primaryloss = criterion(outputs, targets)
 
-        estimatedensity = torch.nn.functional.softmax(outputs, dim=1)
-        estimatedensity = torch.sum(estimatedensity, dim=0) / Bs
-
-        truedensity = torch.zeros(10).cuda()
-        for i in range(10):
-            truedensity[i] = (targets == i).float().sum() / Bs
-
-        kl = torch.nn.functional.kl_div(estimatedensity, truedensity)
-        kl = torch.nn.functional.relu(kl)
-        secondaryloss = kl + torch.abs(estimatedensity - truedensity).sum()
+        estimatedensity = density.logitTOdensity(outputs)
+        truedensity = density.labelsTOdensity(targets)
+        secondaryloss = density.kl_and_l2(estimatedensity, secondaryloss)
 
         loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()
