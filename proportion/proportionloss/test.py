@@ -40,7 +40,7 @@ with torch.no_grad():
     print("test accuracy=", 100.0 * accuracy / total)
 
     estimatedensity = cm.sum(dim=1) / total
-    truedistribution = cm.sum(dim=0) / total
+    truedensity = cm.sum(dim=0) / total
     print("predicted density", estimatedensity)
     print("true density", truedensity)
     print(torch.nn.functional.kl_div(estimatedensity, truedensity))
