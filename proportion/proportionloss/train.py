@@ -10,7 +10,7 @@ else:
 
 print("load data")
 raw = torchvision.transforms.ToTensor()
-root, Tr, Bs = "./build/data", True, 8
+root, Tr, Bs = "./build/data", True, 256
 trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=raw)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
@@ -19,7 +19,7 @@ RESNET = True
 if RESNET:
     net = torchvision.models.resnet50(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.classifier = torch.nn.Linear(2048, 10)
+    net.fc = torch.nn.Linear(2048, 10)
 else:
     net = torchvision.models.vgg16(pretrained=True)
     net.avgpool = torch.nn.Identity()
@@ -51,7 +51,7 @@ for epoch in range(nbepoch):
         for i in range(10):
             truedensity[i] = (targets == i).float().sum()
 
-        secondaryloss = torch.nn.KLDivLoss(estimatedensity, truedensity)
+        secondaryloss = torch.nn.functional.kl_div(estimatedensity, truedensity)
 
         loss = primaryloss + secondaryloss
         printloss[0] += loss.detach()

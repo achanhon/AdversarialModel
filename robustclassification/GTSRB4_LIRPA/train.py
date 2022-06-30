@@ -34,10 +34,10 @@ trainloader = torch.utils.data.DataLoader(
 print("load model")
 import torch.nn as nn
 
-#net = torchvision.models.vgg13(pretrained=True)
-#net.avgpool = nn.Identity()
-#net.classifier = None
-#net.classifier = nn.Linear(512, 4)
+# net = torchvision.models.vgg13(pretrained=True)
+# net.avgpool = nn.Identity()
+# net.classifier = None
+# net.classifier = nn.Linear(512, 4)
 net = torch.nn.Sequential()
 net.add_module("caca1", torch.nn.MaxPool2d(kernel_size=4, stride=4))
 net.add_module("caca2", torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1))

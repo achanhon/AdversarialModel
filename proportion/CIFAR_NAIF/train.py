@@ -10,7 +10,7 @@ else:
 
 print("load data")
 raw = torchvision.transforms.ToTensor()
-root, Tr, Bs = "./build/data", True, 128
+root, Tr, Bs = "./build/data", True, 256
 trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=raw)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
@@ -19,7 +19,7 @@ RESNET = True
 if RESNET:
     net = torchvision.models.resnet50(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.classifier = torch.nn.Linear(2048, 10)
+    net.fc = torch.nn.Linear(2048, 10)
 else:
     net = torchvision.models.vgg16(pretrained=True)
     net.avgpool = torch.nn.Identity()
@@ -30,7 +30,7 @@ net.train()
 print("train setting")
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-nbepoch = 10
+nbepoch = 20
 
 print("train")
 for epoch in range(nbepoch):
@@ -46,7 +46,7 @@ for epoch in range(nbepoch):
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
-        if epoch > 5:
+        if epoch > 10:
             loss *= 0.1
 
         optimizer.zero_grad()
