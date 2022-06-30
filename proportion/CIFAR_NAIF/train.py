@@ -49,7 +49,7 @@ net.train()
 print("train setting")
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-nbepoch = 20
+nbepoch = 40
 
 print("train")
 for epoch in range(nbepoch):
