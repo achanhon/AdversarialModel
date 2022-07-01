@@ -19,7 +19,7 @@ if len(sys.argv) > 2:
     inputpaths = sys.argv[2:]
     inputs = [torch.load("build/" + name) for name in inputpaths]
     print(inputs)
-    inputs = torch.cat(inputs)
+    inputs = torch.Tensor(inputs)
     mean = inputs.mean()
     var = inputs.var()
     meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")"
