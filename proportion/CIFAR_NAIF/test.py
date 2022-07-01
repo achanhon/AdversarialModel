@@ -10,7 +10,7 @@ else:
     print("no cuda")
     quit()
 if len(sys.argv) == 1:
-    print("no backbone provided")
+    print("no output provided")
     quit()
 
 if len(sys.argv) > 2:

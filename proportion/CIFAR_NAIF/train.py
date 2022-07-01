@@ -86,6 +86,7 @@ for epoch in range(nbepoch):
             printloss = torch.zeros(2).cuda()
 
     torch.save(net, "build/model.pth")
+    quit()
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
         quit()
