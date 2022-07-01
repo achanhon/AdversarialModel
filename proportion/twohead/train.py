@@ -83,7 +83,7 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
         optimizer.step()
 
-        _, predicted = outputs.max(1)
+        _, predicted = outputs1.max(1)
         total += Bs
         correct += (predicted == targets).float().sum()
 
