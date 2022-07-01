@@ -18,6 +18,7 @@ if len(sys.argv) > 2:
     outputpath = sys.argv[1]
     inputpaths = sys.argv[2:]
     inputs = [torch.load("build/" + name) for name in inputpaths]
+    print(inputs)
     inputs = torch.cat(inputs)
     mean = inputs.mean()
     var = inputs.var()
