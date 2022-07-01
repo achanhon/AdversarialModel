@@ -17,7 +17,7 @@ if len(sys.argv) > 2:
     print("just merge result")
     outputpath = sys.argv[1]
     inputpaths = sys.argv[2:]
-    inputs = [torch.load(name) for name in inputpaths]
+    inputs = [torch.load("build/" + name) for name in inputpaths]
     inputs = torch.cat(inputs)
     mean = inputs.mean()
     var = inputs.var()
