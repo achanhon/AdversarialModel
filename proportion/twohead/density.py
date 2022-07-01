@@ -32,5 +32,5 @@ class TwoHead(torch.nn.Module):
         self.fc1 = torch.nn.Linear(inputsize, outputsize)
         self.fc2 = torch.nn.Linear(inputsize, outputsize)
 
-    def foward(self, x):
+    def forward(self, x):
         return self.fc1(x), self.fc2(x)
