@@ -72,5 +72,5 @@ with torch.no_grad():
             averageKL[1] += 1
 
     averageKL = averageKL[0] / averageKL[1]
-    torch.save(sys.argv[1], averageKL)
+    torch.save(averageKL, "build/" + sys.argv[1])
     print("test divergence=", averageKL)
