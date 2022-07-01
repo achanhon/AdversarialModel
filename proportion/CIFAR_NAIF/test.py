@@ -54,4 +54,4 @@ with torch.no_grad():
             averageKL[1] += 1
 
     averageKL = averageKL[0] / averageKL[1]
-    print("test divergence=", KL)
+    print("test divergence=", averageKL)
