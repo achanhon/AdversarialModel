@@ -1,3 +1,4 @@
+import sys
 import torch
 import torchvision
 import density
@@ -8,9 +9,26 @@ if torch.cuda.is_available():
 else:
     print("no cuda")
     quit()
+if len(argv) == 1:
+    print("no backbone provided")
+    quit()
+
+if len(argv > 2):
+    print("just merge result")
+    outputpath = argv[1]
+    inputpaths = argv[2:]
+    inputs = [torch.load(name) for name in inputpaths]
+    inputs = torch.cat(inputs)
+    mean = inputs.mean()
+    var = inputs.var()
+    meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")"
+    with open(outputpath, "w") as f:
+        f.write(meanvar)
+    f.close()
+    print(mean, var)
+    quit()
 
 
-print("load data")
 print("load data")
 raw = torchvision.transforms.ToTensor()
 root, Tr, Fl, Bs = "./build/data", True, False, 256
@@ -54,4 +72,5 @@ with torch.no_grad():
             averageKL[1] += 1
 
     averageKL = averageKL[0] / averageKL[1]
+    torch.save(sys.argv[1], averageKL)
     print("test divergence=", averageKL)
