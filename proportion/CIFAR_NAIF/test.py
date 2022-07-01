@@ -13,7 +13,7 @@ if len(sys.argv) == 1:
     print("no backbone provided")
     quit()
 
-if len(sys.argv > 2):
+if len(sys.argv) > 2:
     print("just merge result")
     outputpath = sys.argv[1]
     inputpaths = sys.argv[2:]
