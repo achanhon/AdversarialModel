@@ -21,7 +21,6 @@ echo "VGG13"
 /d/jcastillo/anaconda3/bin/python -u test.py vgg13_5.txt
 
 /d/jcastillo/anaconda3/bin/python -u test.py vgg13_global.txt vgg13_1.txt vgg13_2.txt vgg13_3.txt vgg13_4.txt vgg13_5.txt
-exit 0
 rm -f build/vgg13_1.txt build/vgg13_2.txt build/vgg13_3.txt build/vgg13_4.txt build/vgg13_5.txt
 
 
