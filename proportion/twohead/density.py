@@ -24,3 +24,13 @@ def extendedKL(estimatedensity, truedensity):
     kl = torch.nn.functional.relu(kl)
     diff = estimatedensity - truedensity
     return kl + torch.sum(diff * diff) + diff.abs().sum()
+
+
+class TwoHead(torch.nn.Module):
+    def __init__(self, inputsize, outputsize):
+        super(TwoHead, self).__init__()
+        self.fc1 = torch.nn.Linear(inputsize, outputsize)
+        self.fc2 = torch.nn.Linear(inputsize, outputsize)
+
+    def foward(self, x):
+        return fc1(x), fc2(x)

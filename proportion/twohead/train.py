@@ -27,17 +27,6 @@ root, Tr, Bs = "./build/data", True, 256
 trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=aug)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
-
-class TwoHead(torch.nn.Module):
-    def __init__(self, inputsize, outputsize):
-        super(TwoHead, self).__init__()
-        self.fc1 = torch.nn.Linear(inputsize, outputsize)
-        self.fc2 = torch.nn.Linear(inputsize, outputsize)
-
-    def foward(self, x):
-        return fc1(x), fc2(x)
-
-
 print("load model")
 backbone = "resnet34"
 assert backbone in ["resnet50", "resnet34", "vgg13", "vgg16"]
@@ -48,16 +37,16 @@ if "resnet" in backbone:
         net = torchvision.models.resnet34(pretrained=True)
     net.avgpool = torch.nn.Identity()
     if backbone == "resnet50":
-        net.fc = TwoHead(2048, 10)
+        net.fc = density.TwoHead(2048, 10)
     else:
-        net.fc = TwoHead(512, 10)
+        net.fc = density.TwoHead(512, 10)
 else:
     if backbone == "vgg13":
         net = torchvision.models.vgg13(pretrained=True)
     else:
         net = torchvision.models.vgg16(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.classifier = TwoHead(512, 10)
+    net.classifier = density.TwoHead(512, 10)
 net = net.cuda()
 net.train()
 
