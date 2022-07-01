@@ -64,7 +64,7 @@ for epoch in range(nbepoch):
     for inputs, targets in trainloader:
         inputs, targets = inputs.cuda(), targets.cuda()
 
-        outputs1, output2 = net(inputs)
+        outputs1, outputs2 = net(inputs)
         primaryloss = criterion(outputs1, targets)
 
         estimatedensity = density.logitTOdensity(outputs2)
