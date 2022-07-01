@@ -1,6 +1,6 @@
+import sys
 import torch
 import torchvision
-import density
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
@@ -8,27 +8,27 @@ if torch.cuda.is_available():
 else:
     print("no cuda")
     quit()
+if len(sys.argv) == 1:
+    print("no backbone provided")
+    quit()
+
 
 print("load data")
-mode = "withaugmentation"
-if mode == "raw":
-    aug = torchvision.transforms.ToTensor()
-else:
-    aug = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.RandomResizedCrop(32),
-            torchvision.transforms.RandomRotation(10),
-            torchvision.transforms.RandomHorizontalFlip(0.5),
-            torchvision.transforms.ToTensor(),
-        ]
-    )
+aug = torchvision.transforms.Compose(
+    [
+        torchvision.transforms.RandomResizedCrop(32),
+        torchvision.transforms.RandomRotation(10),
+        torchvision.transforms.RandomHorizontalFlip(0.5),
+        torchvision.transforms.ToTensor(),
+    ]
+)
 
 root, Tr, Bs = "./build/data", True, 256
 trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=aug)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
-backbone = "resnet34"
+backbone = sys.argv[1]
 assert backbone in ["resnet50", "resnet34", "vgg13", "vgg16"]
 if "resnet" in backbone:
     if backbone == "resnet50":
