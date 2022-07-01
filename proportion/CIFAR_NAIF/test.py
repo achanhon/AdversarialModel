@@ -9,14 +9,14 @@ if torch.cuda.is_available():
 else:
     print("no cuda")
     quit()
-if len(argv) == 1:
+if len(sys.argv) == 1:
     print("no backbone provided")
     quit()
 
-if len(argv > 2):
+if len(sys.argv > 2):
     print("just merge result")
-    outputpath = argv[1]
-    inputpaths = argv[2:]
+    outputpath = sys.argv[1]
+    inputpaths = sys.argv[2:]
     inputs = [torch.load(name) for name in inputpaths]
     inputs = torch.cat(inputs)
     mean = inputs.mean()

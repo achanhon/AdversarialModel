@@ -8,7 +8,7 @@ if torch.cuda.is_available():
 else:
     print("no cuda")
     quit()
-if len(argv) == 1:
+if len(sys.argv) == 1:
     print("no backbone provided")
     quit()
 
