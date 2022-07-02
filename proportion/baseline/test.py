@@ -42,15 +42,31 @@ net = net.cuda()
 net.eval()
 
 with torch.no_grad():
+    print("classical test")
+    cm = torch.zeros(10, 10).cuda()
+    for inputs, targets in testloader:
+        inputs, targets = inputs.cuda(), targets.cuda()
+
+        outputs, _ = net(inputs)
+        _, predicted = outputs.max(1)
+
+        for i in range(10):
+            for j in range(10):
+                cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
+
+    total = torch.sum(cm)
+    accuracy = torch.sum(torch.diagonal(cm)) / total
+    print("test cm", cm)
+    print("test accuracy=", accuracy)
+
     print("proportion test")
     averageKL = torch.zeros(2).cuda()
     for epoch in range(10):
         for inputs, targets in testloader:
             inputs, targets = inputs.cuda(), targets.cuda()
 
-            _, outputs = net(inputs)
+            _, estimatedensity = net(inputs)
 
-            estimatedensity = density.logitTOdensity(outputs)
             truedensity = density.labelsTOdensity(targets)
             averageKL[0] += density.extendedKL(estimatedensity, truedensity)
             averageKL[1] += 1

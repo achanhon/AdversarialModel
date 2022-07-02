@@ -26,13 +26,21 @@ def extendedKL(estimatedensity, truedensity):
     return kl + torch.sum(diff * diff) + diff.abs().sum()
 
 
-class BatchClassification(torch.nn.Module):
+class TwoHead(torch.nn.Module):
     def __init__(self, inputsize, outputsize):
         super(TwoHead, self).__init__()
-        self.fc = torch.nn.Linear(inputsize*2, outputsize)
+        self.fc1 = torch.nn.Linear(inputsize, outputsize)
+        self.fc2 = torch.nn.Linear(inputsize * 2, outputsize)
 
     def forward(self, x):
-        xm,_ = x.max(dim=0)
+        xm, _ = x.max(dim=0)
         xa = x.mean(dim=0)
-        x = torch.cat(xm,xa)
-        return self.fc1(x)
+        xma = torch.cat(xm, xa)
+        predensity = self.fc2(xma)
+
+        softmaxdensity = torch.nn.functional.softmax(predensity)
+        tmp = torch.nn.functional.relu(predensity) + softmaxdensity
+        total = tmp.sum()
+        estimatedensity = tmp / total
+
+        return self.fc1(x), estimatedensity

@@ -38,16 +38,16 @@ if "resnet" in backbone:
         net = torchvision.models.resnet34(pretrained=True)
     net.avgpool = torch.nn.Identity()
     if backbone == "resnet50":
-        net.fc = density.BatchClassification(2048, 10)
+        net.fc = density.TwoHead(2048, 10)
     else:
-        net.fc = density.BatchClassification(512, 10)
+        net.fc = density.TwoHead(512, 10)
 else:
     if backbone == "vgg13":
         net = torchvision.models.vgg13(pretrained=True)
     else:
         net = torchvision.models.vgg16(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.classifier = density.BatchClassification(512, 10)
+    net.classifier = density.TwoHead(512, 10)
 net = net.cuda()
 net.train()
 
@@ -65,10 +65,9 @@ for epoch in range(nbepoch):
     for inputs, targets in trainloader:
         inputs, targets = inputs.cuda(), targets.cuda()
 
-        outputs1, outputs2 = net(inputs)
+        outputs1, estimatedensity = net(inputs)
         primaryloss = criterion(outputs1, targets)
 
-        estimatedensity = density.logitTOdensity(outputs2)
         truedensity = density.labelsTOdensity(targets)
         secondaryloss = density.extendedKL(estimatedensity, truedensity)
 
