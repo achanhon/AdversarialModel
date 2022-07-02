@@ -23,8 +23,8 @@ aug = torchvision.transforms.Compose(
     ]
 )
 
-root, Tr, Bs = "./build/data", True, 256
-trainset = torchvision.datasets.SVHN(root=root, train=Tr, download=Tr, transform=aug)
+root, Tr, Bs, Sp = "./build/data", True, 256, "train"
+trainset = torchvision.datasets.SVHN(root=root, split=Sp, download=Tr, transform=aug)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
