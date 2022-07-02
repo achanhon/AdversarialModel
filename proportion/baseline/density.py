@@ -35,7 +35,7 @@ class TwoHead(torch.nn.Module):
     def forward(self, x):
         xm, _ = x.max(dim=0)
         xa = x.mean(dim=0)
-        xma = torch.cat(xm, xa)
+        xma = torch.cat([xm, xa])
         predensity = self.fc2(xma)
 
         softmaxdensity = torch.nn.functional.softmax(predensity)
