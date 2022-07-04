@@ -34,20 +34,16 @@ class EurosatSplit(torch.utils.data.Dataset):
 
         Tr, Pa = True, "build/"
         if flag == "test":
-            aug = torchvision.transforms.Compose(
-                [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
-            )
-
+            tmp = [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
         else:
-            aug = torchvision.transforms.Compose(
-                [
-                    torchvision.transforms.RandomResizedCrop(32),
-                    torchvision.transforms.RandomRotation(90),
-                    torchvision.transforms.RandomHorizontalFlip(0.5),
-                    torchvision.transforms.RandomVerticalFlip(0.5),
-                    torchvision.transforms.ToTensor(),
-                ]
-            )
+            tmp = [
+                torchvision.transforms.RandomResizedCrop(32),
+                torchvision.transforms.RandomRotation(90),
+                torchvision.transforms.RandomHorizontalFlip(0.5),
+                torchvision.transforms.RandomVerticalFlip(0.5),
+                torchvision.transforms.ToTensor(),
+            ]
+        aug = torchvision.transforms.Compose(tmp)
 
         self.alldata = torchvision.datasets.EuroSAT(root=Pa, download=Tr, transform=aug)
 
