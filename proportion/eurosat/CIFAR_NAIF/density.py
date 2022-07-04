@@ -32,7 +32,7 @@ class EurosatSplit(torch.utils.data.Dataset):
         assert flag in ["train", "test"]
         self.flag = flag
 
-        Tr, Pa = True, "build/"
+        Tr, Pa = True, "build/data"
         if flag == "test":
             tmp = [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
         else:

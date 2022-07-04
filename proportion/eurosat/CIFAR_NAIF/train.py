@@ -1,6 +1,7 @@
 import sys
 import torch
 import torchvision
+import density
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
@@ -14,17 +15,8 @@ if len(sys.argv) == 1:
 
 
 print("load data")
-aug = torchvision.transforms.Compose(
-    [
-        torchvision.transforms.RandomResizedCrop(32),
-        torchvision.transforms.RandomRotation(10),
-        torchvision.transforms.RandomHorizontalFlip(0.5),
-        torchvision.transforms.ToTensor(),
-    ]
-)
-
-root, Tr, Bs = "./build/data", True, 256
-trainset = torchvision.datasets.CIFAR10(root=root, train=Tr, download=Tr, transform=aug)
+Bs = 256
+trainset = density.EurosatSplit("train")
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
