@@ -1,6 +1,7 @@
 import torch
 import torchvision
 
+
 def logitTOdensity(logit):
     softmaxdensity = torch.nn.functional.softmax(logit, dim=1)
     tmp = torch.nn.functional.relu(logit) + softmaxdensity
@@ -30,10 +31,25 @@ class EurosatSplit(torch.utils.data.Dataset):
     def __init__(self, flag):
         assert flag in ["train", "test"]
         self.flag = flag
-        Tr = True
-        Pa = "build/"
-        raw = torchvision.transforms.ToTensor()
-        self.alldata = torchvision.datasets.EuroSAT(root=Pa, download=Tr, transform=raw)
+
+        Tr, Pa = True, "build/"
+        if flag == "test":
+            aug = torchvision.transforms.Compose(
+                [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
+            )
+
+        else:
+            aug = torchvision.transforms.Compose(
+                [
+                    torchvision.transforms.RandomResizedCrop(32),
+                    torchvision.transforms.RandomRotation(90),
+                    torchvision.transforms.RandomHorizontalFlip(0.5),
+                    torchvision.transforms.RandomVerticalFlip(0.5),
+                    torchvision.transforms.ToTensor(),
+                ]
+            )
+
+        self.alldata = torchvision.datasets.EuroSAT(root=Pa, download=Tr, transform=aug)
 
         if self.flag == "train":
             self.size = len(self.alldata) * 2 // 3 - 2
@@ -49,15 +65,3 @@ class EurosatSplit(torch.utils.data.Dataset):
         else:
             lol = 3 * (idx // 2) + (idx % 2)  # thank oeis
             return self.alldata.__getitem__(lol)
-
-
-if __name__=="__main__":
-    lol = EurosatSplit("train")
-    dataloader = torch.utils.data.DataLoader(lol, batch_size=64, shuffle=True)
-
-    for x, y in dataloader:
-        if y.shape[0] != 64:
-            print(x.shape)
-            torchvision.utils.save_image(x, "/home/achanhon/Bureau/lol.png")
-
-
