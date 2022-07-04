@@ -1,5 +1,5 @@
 import torch
-
+import torchvision
 
 def logitTOdensity(logit):
     softmaxdensity = torch.nn.functional.softmax(logit, dim=1)
@@ -26,9 +26,38 @@ def extendedKL(estimatedensity, truedensity):
     return kl + torch.sum(diff * diff) + diff.abs().sum()
 
 
-def geteurosat(flag="train"):
-    alldata = torchvision.datasets.eurosat(root="build/", download=True)
-    
-    
-    
-    #trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
+class EurosatSplit(torch.utils.data.Dataset):
+    def __init__(self, flag):
+        assert flag in ["train", "test"]
+        self.flag = flag
+        Tr = True
+        Pa = "build/"
+        raw = torchvision.transforms.ToTensor()
+        self.alldata = torchvision.datasets.EuroSAT(root=Pa, download=Tr, transform=raw)
+
+        if self.flag == "train":
+            self.size = len(self.alldata) * 2 // 3 - 2
+        else:
+            self.size = len(self.alldata) // 3 - 2
+
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, idx):
+        if self.flag == "test":
+            return self.alldata.__getitem__(idx * 3 + 2)
+        else:
+            lol = 3 * (idx // 2) + (idx % 2)  # thank oeis
+            return self.alldata.__getitem__(lol)
+
+
+if __name__=="__main__":
+    lol = EurosatSplit("train")
+    dataloader = torch.utils.data.DataLoader(lol, batch_size=64, shuffle=True)
+
+    for x, y in dataloader:
+        if y.shape[0] != 64:
+            print(x.shape)
+            torchvision.utils.save_image(x, "/home/achanhon/Bureau/lol.png")
+
+
