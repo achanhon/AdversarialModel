@@ -5,8 +5,8 @@ mv data build
 
 
 echo "VGG13"
-/home/achanhon/miniconda3/bin/python -u train.py vgg13
-/home/achanhon/miniconda3/bin/python -u test.py vgg13_1.txt
+/d/achanhon/miniconda3/bin/python -u train.py vgg13
+/d/achanhon/miniconda3/bin/python -u test.py vgg13_1.txt
 
 /d/achanhon/miniconda3/bin/python -u train.py vgg13
 /d/achanhon/miniconda3/bin/python -u test.py vgg13_2.txt

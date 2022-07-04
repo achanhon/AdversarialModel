@@ -1,4 +1,5 @@
 import torch
+import torchvision
 
 
 def logitTOdensity(logit):
@@ -44,3 +45,39 @@ class TwoHead(torch.nn.Module):
         estimatedensity = tmp / total
 
         return self.fc1(x), estimatedensity
+
+
+class EurosatSplit(torch.utils.data.Dataset):
+    def __init__(self, flag):
+        assert flag in ["train", "test"]
+        self.flag = flag
+
+        Tr, Pa = True, "build/data"
+        if flag == "test":
+            tmp = [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
+        else:
+            tmp = [
+                torchvision.transforms.RandomResizedCrop(32),
+                torchvision.transforms.RandomRotation(90),
+                torchvision.transforms.RandomHorizontalFlip(0.5),
+                torchvision.transforms.RandomVerticalFlip(0.5),
+                torchvision.transforms.ToTensor(),
+            ]
+        aug = torchvision.transforms.Compose(tmp)
+
+        self.alldata = torchvision.datasets.EuroSAT(root=Pa, download=Tr, transform=aug)
+
+        if self.flag == "train":
+            self.size = len(self.alldata) * 2 // 3 - 2
+        else:
+            self.size = len(self.alldata) // 3 - 2
+
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, idx):
+        if self.flag == "test":
+            return self.alldata.__getitem__(idx * 3 + 2)
+        else:
+            lol = 3 * (idx // 2) + (idx % 2)  # thank oeis
+            return self.alldata.__getitem__(lol)
