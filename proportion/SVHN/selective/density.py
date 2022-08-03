@@ -32,7 +32,7 @@ def selectivelogitTOdensity(logit):
     entropyIndex = sorted(entropyIndex)
     selectedIndex = [entropyIndex[i][1] for i in range(int(0.8 * entropy.shape[0]))]
     tmp = [logit[i] for i in selectedIndex]
-    logit = tmp.stack(logit)
+    logit = torch.stack(tmp)
 
     softmaxdensity = torch.nn.functional.softmax(logit, dim=1)
     tmp = torch.nn.functional.relu(logit) + softmaxdensity
