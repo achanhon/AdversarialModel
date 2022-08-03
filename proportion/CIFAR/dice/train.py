@@ -63,9 +63,9 @@ def mydice(logit, targets, numclass):
     classI, classO = torch.zeros(numclass), torch.zeros(numclass)
     classI, classO = classI.cuda(), classO.cuda()
     for i in range(logit.shape[0]):
-        classI[targets[i]] = classI[targets[i]] + logit[i][i]
+        classI[targets[i]] = classI[targets[i]] + logit[i][targets[i]]
         for j in range(numclass):
-            classO[j] = classO[j] + logit[i][i]
+            classO[j] = classO[j] + logit[i][j]
 
     IoU = classI / (classO + 0.0001)
     IoU = torch.sum(IoU) / numclass
