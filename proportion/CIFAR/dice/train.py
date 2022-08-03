@@ -61,10 +61,11 @@ def mydice(logit, targets, numclass):
     logit = torch.nn.functional.relu(logit) + softmaxdensity
 
     classI, classO = torch.zeros(numclass), torch.zeros(numclass)
+    classI, classO = classI.cuda(), classO.cuda()
     for i in range(logit.shape[0]):
-        classI[targets[i]] += logit[i][i]
+        classI[targets[i]] = classI[targets[i]] + logit[i][i]
         for j in range(numclass):
-            classO[j] += logit[i][i]
+            classO[j] = classO[j] + logit[i][i]
 
     IoU = classI / (classO + 0.0001)
     IoU = torch.sum(IoU) / numclass
