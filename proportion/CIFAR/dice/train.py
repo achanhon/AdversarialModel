@@ -82,7 +82,7 @@ for epoch in range(nbepoch):
 
         outputs = net(inputs)
         loss = criterion(outputs, targets)
-        auxiliaryloss = density.mydice(outputs, targets, 10)
+        auxiliaryloss = mydice(outputs, targets, 10)
         loss = loss + auxiliaryloss
         printloss[0] += loss.detach()
         printloss[1] += Bs
