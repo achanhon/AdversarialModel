@@ -32,8 +32,8 @@ if len(sys.argv) > 2:
 
 print("load data")
 raw = torchvision.transforms.ToTensor()
-root, Tr, Bs, Sp = "./build/data", True, 256, "test"
-testset = torchvision.datasets.SVHN(root=root, split=Sp, download=Tr, transform=raw)
+root, Tr, Fl, Bs = "./build/data", True, False, 256
+testset = torchvision.datasets.CIFAR10(root=root, train=Fl, download=Tr, transform=raw)
 testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=True)
 
 print("load model")
@@ -67,7 +67,7 @@ with torch.no_grad():
 
             outputs = net(inputs)
 
-            estimatedensity = density.selectivelogitTOdensity(outputs)
+            estimatedensity = density.logitTOdensity(outputs)
             truedensity = density.labelsTOdensity(targets)
             averageKL[0] += density.extendedKL(estimatedensity, truedensity)
             averageKL[1] += 1
