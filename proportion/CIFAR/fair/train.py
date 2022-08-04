@@ -113,4 +113,4 @@ with torch.no_grad():
     classweigth = classweigth / 0.1
     print("classweigth", classweigth)
 
-    torch.save(net, "build/model_externalweigths.pth")
+    torch.save(classweigth, "build/model_externalweigths.pth")
