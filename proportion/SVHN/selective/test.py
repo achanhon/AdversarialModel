@@ -67,7 +67,7 @@ with torch.no_grad():
 
             outputs = net(inputs)
 
-            estimatedensity = density.selectivelogitTOdensitylogitTOdensity(outputs)
+            estimatedensity = selectivelogitTOdensitylogitTOdensity(outputs)
             truedensity = density.labelsTOdensity(targets)
             averageKL[0] += density.extendedKL(estimatedensity, truedensity)
             averageKL[1] += 1
