@@ -88,4 +88,26 @@ for epoch in range(nbepoch):
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
     if correct > 0.98 * total:
-        quit()
+        break
+
+
+print("reweighting")
+with torch.no_grad():
+    classweigth = torch.zeros(10).cuda()
+    totalsize = 0
+    for inputs, _ in trainloader:
+        inputs = inputs.cuda()
+        outputs = net(inputs)
+
+        softmaxdensity = torch.nn.functional.softmax(outputs, dim=1)
+        tmp = torch.nn.functional.relu(outputs) + softmaxdensity
+        total = tmp.sum(dim=1)
+        total = torch.stack([total] * 10, dim=1)
+        estimatedensity = tmp / total
+
+        classweigth = classweigth + estimatedensity.sum(dim=0)
+        totalsize = totalsize + inputs.shape[0]
+
+    classweigth = classweigth / totalsize
+    print("classweigth", classweigth)
+    torch.save(classweigth, "build/model_externalweigths.pth")

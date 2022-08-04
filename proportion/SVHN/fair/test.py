@@ -38,6 +38,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=True)
 
 print("load model")
 net = torch.load("build/model.pth")
+reweighting = torch.load("build/model_externalweigths.pth")
 net = net.cuda()
 net.eval()
 
@@ -67,7 +68,7 @@ with torch.no_grad():
 
             outputs = net(inputs)
 
-            estimatedensity = density.logitTOdensity(outputs)
+            estimatedensity = density.weightedlogitTOdensity(outputs, reweighting)
             truedensity = density.labelsTOdensity(targets)
             averageKL[0] += density.extendedKL(estimatedensity, truedensity)
             averageKL[1] += 1
