@@ -102,7 +102,7 @@ with torch.no_grad():
         softmaxdensity = torch.nn.functional.softmax(outputs, dim=1)
         tmp = torch.nn.functional.relu(outputs) + softmaxdensity
         total = tmp.sum(dim=1)
-        total = torch.stack([total] * logit.shape[1], dim=1)
+        total = torch.stack([total] * 10, dim=1)
         estimatedensity = tmp / total
 
         classweigth = classweigth + estimatedensity
