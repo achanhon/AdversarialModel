@@ -105,7 +105,7 @@ with torch.no_grad():
         total = torch.stack([total] * 10, dim=1)
         estimatedensity = tmp / total
 
-        classweigth = classweigth + estimatedensity
+        classweigth = classweigth + estimatedensity.sum(dim=0)
         totalsize = totalsize + inputs.shape[0]
 
     classweigth = classweigth / totalsize
