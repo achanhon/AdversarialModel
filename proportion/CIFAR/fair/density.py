@@ -33,8 +33,8 @@ def weightedlogitTOdensity(logit, weight):
     total = torch.stack([total] * logit.shape[1], dim=1)
 
     estimatedensity = tmp / total
-    estimatedensity = estimatedensity.sum(dim=0) / logit.shape[0]
     estimatedensity = estimatedensity / weight
 
+    estimatedensity = estimatedensity.sum(dim=0)
     total = estimatedensity.sum(dim=0)
     return estimatedensity / total
