@@ -98,18 +98,19 @@ with torch.no_grad():
     for inputs, _ in trainloader:
         inputs = inputs.cuda()
         outputs = net(inputs)
-        
+
         softmaxdensity = torch.nn.functional.softmax(outputs, dim=1)
         tmp = torch.nn.functional.relu(outputs) + softmaxdensity
         total = tmp.sum(dim=1)
         total = torch.stack([total] * logit.shape[1], dim=1)
         estimatedensity = tmp / total
-        
-        classweigth = classweigth+estimatedensity
-        totalsize = totalsize+inputs.shape[0]
-    
-    classweigth = classweigth/totalsize
-    
-    print("classweigth",classweigth)
-        
-        
+
+        classweigth = classweigth + estimatedensity
+        totalsize = totalsize + inputs.shape[0]
+
+    classweigth = classweigth / totalsize
+    print("classweigth", classweigth)
+    classweigth = classweigth / 0.1
+    print("classweigth", classweigth)
+
+    torch.save(net, "build/model_externalweigths.pth")

@@ -24,3 +24,18 @@ def extendedKL(estimatedensity, truedensity):
     kl = torch.nn.functional.relu(kl)
     diff = estimatedensity - truedensity
     return kl + torch.sum(diff * diff) + diff.abs().sum()
+
+
+def weightedlogitTOdensity(logit, weight):
+    softmaxdensity = torch.nn.functional.softmax(logit, dim=1)
+    tmp = torch.nn.functional.relu(logit) + softmaxdensity
+    total = tmp.sum(dim=1)
+    total = torch.stack([total] * logit.shape[1], dim=1)
+
+    estimatedensity = tmp / total
+    estimatedensity = estimatedensity.sum(dim=0) / logit.shape[0]
+    estimatedensity = estimatedensity / weight
+
+    total = estimatedensity.sum(dim=1)
+    total = torch.stack([total] * estimatedensity.shape[0], dim=1)
+    return estimatedensity / total
