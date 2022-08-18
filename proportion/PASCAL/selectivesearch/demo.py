@@ -6,22 +6,25 @@ cv2.setUseOptimized(True)
 cv2.setNumThreads(4)
 
 im = cv2.imread("build/image.png")
-newHeight = 200
-newWidth = int(im.shape[1] * 200 / im.shape[0])
-im = cv2.resize(im, (newWidth, newHeight))
+# newHeight = 600
+# newWidth = int(im.shape[1] * newHeight / im.shape[0])
+# im = cv2.resize(im, (newWidth, newHeight))
 
 ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
 ss.setBaseImage(im)
 
-# ss.switchToSelectiveSearchFast()
+ss.switchToSelectiveSearchFast()
 # ss.switchToSelectiveSearchQuality()
 
 rects = ss.process()
 print("Total Number of Region Proposals:", len(rects))
 
+rects = [(x, y, w, h) for (x, y, w, h) in rects if 15 <= w <= 75 and 15 <= h <= 75]
+print("Total Number of Region Proposals [15,75]:", len(rects))
+
 print("debug")
-if len(rects > 100):
-    rects = rects[0:100]
+if len(rects) > 1000:
+    rects = rects[0:1000]
 
 imOut = im.copy()
 for rect in rects:
