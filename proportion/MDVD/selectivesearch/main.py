@@ -118,6 +118,8 @@ for flag in ["train", "test"]:
                     break
 
         badRects = [predRects[i] for i in range(nbRects) if i not in goodRects]
+        badRects = sorted(badRects)
+        badRects = badRects[::2]
         goodRects = [predRects[i] for i in goodRects]
         print(len(goodRects), len(badRects))
 
