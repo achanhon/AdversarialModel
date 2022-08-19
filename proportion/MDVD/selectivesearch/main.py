@@ -12,6 +12,7 @@ os.system("mkdir build/MDVD/train build/MDVD/test")
 os.system("mkdir build/MDVD/train/good build/MDVD/test/good")
 os.system("mkdir build/MDVD/train/bad build/MDVD/test/bad")
 
+
 def extractSelectiveSearchRect(image):
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
     ss.setBaseImage(im)
@@ -33,7 +34,7 @@ def getTrueRect(path):
             yc = int(line[3])
             w = int(line[4])
             h = int(line[5])
-            rects.append((xc - w / 2,yc - h / 2,w, h))
+            rects.append((xc - w / 2, yc - h / 2, w, h))
     return rects
 
 
@@ -46,35 +47,61 @@ tmp = [rad + "_trail" for rad in data["vehicule"]]
 data["vehicule"] = data["vehicule"] + tmp
 data["vehicule"] = ["_" + rad + ".samp" for rad in data["vehicule"]]
 
-def union(a,b):
-  x = min(a[0], b[0])
-  y = min(a[1], b[1])
-  w = max(a[0]+a[2], b[0]+b[2]) - x
-  h = max(a[1]+a[3], b[1]+b[3]) - y
-  return (x, y, w, h)
 
-def intersection(a,b):
-  x = max(a[0], b[0])
-  y = max(a[1], b[1])
-  w = min(a[0]+a[2], b[0]+b[2]) - x
-  h = min(a[1]+a[3], b[1]+b[3]) - y
-  if w<0 or h<0: return () # or (0,0,0,0) ?
-  return (x, y, w, h)
+def IoU(rectA, rectB):
+    x, y, w, h, xx, yy, ww, hh = rectA, rectB
 
-def IoU(rectA,rectB):
-    x,y,w,h = rectA
-    xx,yy,ww,hh = rectB
-    
+    minxA, minxB, minyA, minyB = x, xx, y, yy
+    maxxA, maxxB, maxyA, maxyB = x + w, xx + ww, y + h, yy + hh
+
+    xminI, xmaxI = max(minxA, minxB), min(maxxA, maxxB)
+    yminI, ymaxI = max(minyA, minyB), min(maxyA, maxyB)
+
+    if xmaxI <= xminI or ymaxI <= yminI:
+        return 0.0
+
+    xminU, xmaxU = min(minxA, minxB), max(maxxA, maxxB)
+    yminU, ymaxU = min(minyA, minyB), max(maxyA, maxyB)
+
+    return (xmaxI - xminI) * (ymaxI - yminI) / (xmaxU - xminU) / (ymaxU - yminU)
+
+
+def exportRect(path, im):
+    i = len(os.listdir(path))
+    cv2.imwrite(path + str(i) + ".png", img)
+
 
 for flag in ["train", "test"]:
     for name in data[flag]:
+        print("get rects from", name)
         trueRects = []
         for rad in data["vehicule"]:
             trueRects.extend(getTrueRect(data["root"] + name + rad))
 
-        image = cv2.imread(getTrueRect(data["root"] + name+ ".JPG")
-        selectiveRects = extractSelectiveSearchRect(image)
-        
-        goodRects,badRects = [],[]
+        image = cv2.imread(getTrueRect(data["root"] + name + ".JPG"))
+        predRects = extractSelectiveSearchRect(image)
+        nbRects = len(predRects)
+
+        goodRects = set()
         for rect in trueRects:
-            
+            alliou = [(IoU(rect, predRects[i]), i) for i in range(nbRects)]
+            alliou = sorted(alliou)
+            alliou = alliou[::-1]
+            for i in range(nbRects):
+                if alliou[i][0] > 0.5:
+                    goodRects.add(i)
+                else:
+                    break
+
+        badRects = [predRects[i] for i in range(nbRects) if i not in goodRects]
+        goodRects = [predRects[i] for i in goodRects]
+
+        print("export", name)
+        for (x, y, w, h) in badRects:
+            exportRect(
+                "build/MDVD/" + flag + "/bad/", image[y : y + h, x : x + w].copy()
+            )
+        for (x, y, w, h) in goodRects:
+            exportRect(
+                "build/MDVD/" + flag + "/good/", image[y : y + h, x : x + w].copy()
+            )
