@@ -15,7 +15,7 @@ os.system("mkdir build/MDVD/train/bad build/MDVD/test/bad")
 
 def extractSelectiveSearchRect(image):
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
-    ss.setBaseImage(im)
+    ss.setBaseImage(image)
     ss.switchToSelectiveSearchFast()
     rects = ss.process()
     return rects
@@ -26,18 +26,17 @@ def getTrueRect(path):
         return []
 
     rects = []
-    with open(path, encoding="utf8", errors='ignore') as csvfile:
-        lines = csv.reader(csvfile, delimiter=" ")
-        
-        tmp = []
-        I = len(lines)
-        for i in range(I):
+    with open(path, encoding="utf8", errors="ignore") as csvfile:
+        tmp = csv.reader(csvfile, delimiter=" ")
+
+        lines = []
+        i = iter(tmp)
+        while True:
             try:
-                tmp.append(lines[i])
+                lines.append(next(i))
             except Exception:
-                pass
-        lines = tmp
-        
+                break
+
         lines = lines[3:]
         for line in lines:
             xc = int(line[2])
@@ -89,7 +88,7 @@ for flag in ["train", "test"]:
         for rad in data["vehicule"]:
             trueRects.extend(getTrueRect(data["root"] + name + rad))
 
-        image = cv2.imread(getTrueRect(data["root"] + name + ".JPG"))
+        image = cv2.imread(data["root"] + name + ".JPG")
         predRects = extractSelectiveSearchRect(image)
         nbRects = len(predRects)
 
