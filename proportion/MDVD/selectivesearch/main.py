@@ -37,11 +37,13 @@ def getTrueRect(path):
         i = iter(tmp)
         while True:
             try:
-                lines.append(next(i))
+                line = next(i)
+                if len(line) < 5 or line[0][0] == "@" or line[0][0] == "#":
+                    continue
+                lines.append(line)
             except Exception:
                 break
 
-        lines = lines[3:]
         for line in lines:
             xc = int(line[2])
             yc = int(line[3])
@@ -51,18 +53,9 @@ def getTrueRect(path):
     return rects
 
 
-data = {}
-data["root"] = "/data/MunichDatasetVehicleDetection/Train/2012-04-26-Muenchen-Tunnel_"
-data["train"] = ["4K0G0010", "4K0G0020", "4K0G0030", "4K0G0040", "4K0G0051"]
-data["test"] = ["4K0G0060", "4K0G0070", "4K0G0080", "4K0G0090", "4K0G0100"]
-data["vehicule"] = ["bus", "cam", "truck", "van"]
-tmp = [rad + "_trail" for rad in data["vehicule"]]
-data["vehicule"] = data["vehicule"] + tmp
-data["vehicule"] = ["_" + rad + ".samp" for rad in data["vehicule"]]
-
-
 def IoU(rectA, rectB):
-    x, y, w, h, xx, yy, ww, hh = rectA, rectB
+    x, y, w, h = rectA
+    xx, yy, ww, hh = rectB
 
     minxA, minxB, minyA, minyB = x, xx, y, yy
     maxxA, maxxB, maxyA, maxyB = x + w, xx + ww, y + h, yy + hh
@@ -81,19 +74,33 @@ def IoU(rectA, rectB):
 
 def exportRect(path, im, rect):
     x, y, w, h = rect
+    x, y, w, h = int(x), int(y), int(w), int(h)
     i = len(os.listdir(path))
     cv2.imwrite(path + str(i) + ".png", im[y : y + h, x : x + w, :])
 
 
+data = {}
+data["root"] = "/data/MunichDatasetVehicleDetection/Train/2012-04-26-Muenchen-Tunnel_"
+data["train"] = ["4K0G0010", "4K0G0020", "4K0G0030", "4K0G0040", "4K0G0051"]
+data["test"] = ["4K0G0060", "4K0G0070", "4K0G0080", "4K0G0090", "4K0G0100"]
+data["vehicule"] = ["bus", "cam", "pkw", "truck", "van"]
+tmp = [rad + "_trail" for rad in data["vehicule"]]
+data["vehicule"] = data["vehicule"] + tmp
+data["vehicule"] = ["_" + rad + ".samp" for rad in data["vehicule"]]
+
 for flag in ["train", "test"]:
     for name in data[flag]:
-        print("get rects from", name)
+        print(name)
         trueRects = []
         for rad in data["vehicule"]:
             trueRects.extend(getTrueRect(data["root"] + name + rad))
 
+        for rect in trueRects:
+            print(IoU(rect, rect))
+
         image = cv2.imread(data["root"] + name + ".JPG")
         predRects = extractSelectiveSearchRect(image)
+        predRects = predRects + trueRects
         nbRects = len(predRects)
         print(len(trueRects), nbRects)
 
@@ -103,15 +110,17 @@ for flag in ["train", "test"]:
             alliou = sorted(alliou)
             alliou = alliou[::-1]
             for i in range(nbRects):
-                if alliou[i][0] > 0.5:
+                if alliou[i][0] > 0.1:
                     goodRects.add(i)
                 else:
                     break
 
         badRects = [predRects[i] for i in range(nbRects) if i not in goodRects]
+        badRects = sorted(badRects)
+        badRects = badRects[::2]
         goodRects = [predRects[i] for i in goodRects]
+        print(len(goodRects), len(badRects))
 
-        print("export", name)
         for rect in badRects:
             exportRect("build/MDVD/" + flag + "/bad/", image, rect)
         for rect in goodRects:
