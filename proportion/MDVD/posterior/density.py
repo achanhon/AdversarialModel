@@ -5,14 +5,20 @@ import torch
 import torchvision
 
 
+def smooth(vect):
+    return torch.nn.functional.avg_pool1d(
+        vect.unsqueeze(0), kernel_size=15, padding=7, stride=1
+    )[0]
+
+
 def normalize(positive_vect):
     total = positive_vect.sum()
     return positive_vect / total
 
 
 def logitTOdensity(logit, sizes):
-    sizes = torch.sqrt(sizes)
-    density = torch.zeros(300).cuda()
+    sizes = torch.sqrt(sizes).int()
+    density = torch.zeros(200).cuda()
 
     weight1 = torch.nn.functional.softmax(logit, dim=1) - 0.5
     weigth2 = torch.nn.functional.relu(logit)
@@ -22,24 +28,18 @@ def logitTOdensity(logit, sizes):
         if weight1[i] > 0:
             density[sizes[i]] = weight1[i] + weigth2[i] + density[sizes[i]]
 
-    density = torch.nn.functional.avg_pool1d(
-        density, kernel_size=7, padding=3, stride=1
-    )
-    return normalize(density)
+    return normalize(smooth(density))
 
 
 def labelsT0density(targets, sizes):
-    sizes = torch.sqrt(sizes)
-    density = torch.zeros(300).cuda()
+    sizes = torch.sqrt(sizes).int()
+    density = torch.zeros(200).cuda()
 
     for i in range(sizes.shape[0]):
         if targets[i] == 1:
             density[sizes[i]] = 1 + density[sizes[i]]
 
-    density = torch.nn.functional.avg_pool1d(
-        density, kernel_size=7, padding=3, stride=1
-    )
-    return normalize(density)
+    return normalize(smooth(density))
 
 
 def extendedKL(estimatedensity, truedensity):
@@ -83,37 +83,6 @@ class MDVD(torch.utils.data.Dataset):
         image = PIL.Image.open(path).convert("RGB").copy()
 
         size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
-        if size >= 200*200:
-            size = 200*200-1
-        return self.aug(image), label  , size
-
-
-import matplotlib.pyplot as plt
-
-if __name__ == "__main__":
-
-    rawdata = MDVD("train")
-    dataloader = torch.utils.data.DataLoader(rawdata, batch_size=256, shuffle=True)
-
-    for x, y, s in dataloader:
-
-        s = torch.sqrt(s).int()
-        density = torch.zeros(200)
-
-        for i in range(s.shape[0]):
-            if y[i] == 1:
-                density[s[i]] = 1 + density[s[i]]
-
-        plt.bar(range(200), height=normalize(density))
-        plt.show()
-        
-        density = torch.nn.functional.avg_pool1d(
-            density.unsqueeze(0), kernel_size=15, padding=7, stride=1
-        )[0]
-        plt.bar(range(200), height=normalize(density))
-        plt.show()
-        
-        quit()
-
-        density = labelsT0density(y, s)
-        print(density)
+        if size >= 200 * 200:
+            size = 200 * 200 - 1
+        return self.aug(image), label, size
