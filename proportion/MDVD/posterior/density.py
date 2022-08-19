@@ -83,8 +83,8 @@ class MDVD(torch.utils.data.Dataset):
         image = PIL.Image.open(path).convert("RGB").copy()
 
         size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
-        if size > 300*300:
-            size = 300*300
+        if size >= 200*200:
+            size = 200*200-1
         return self.aug(image), label  , size
 
 
@@ -97,15 +97,20 @@ if __name__ == "__main__":
 
     for x, y, s in dataloader:
 
-        values = []
-        s = torch.sqrt(s)
+        s = torch.sqrt(s).int()
+        density = torch.zeros(200)
+
         for i in range(s.shape[0]):
             if y[i] == 1:
-                values.append(s[i].item())
-        values = sorted(values)
-        print(values)
+                density[s[i]] = 1 + density[s[i]]
 
-        plt.hist(values, bins=50)
+        plt.bar(range(200), height=normalize(density))
+        plt.show()
+        
+        density = torch.nn.functional.avg_pool1d(
+            density.unsqueeze(0), kernel_size=15, padding=7, stride=1
+        )[0]
+        plt.bar(range(200), height=normalize(density))
         plt.show()
         
         quit()
