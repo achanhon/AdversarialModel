@@ -1,22 +1,43 @@
+import os
 import torch
 import torchvision
 
 
-def logitTOdensity(logit):
-    softmaxdensity = torch.nn.functional.softmax(logit, dim=1)
-    tmp = torch.nn.functional.relu(logit) + softmaxdensity
-    total = tmp.sum(dim=1)
-    total = torch.stack([total] * logit.shape[1], dim=1)
-
-    estimatedensity = tmp / total
-    return estimatedensity.sum(dim=0) / logit.shape[0]
+def normalize(positive_vect):
+    total = positive_vect.sum()
+    return positive_vect / total
 
 
-def labelsTOdensity(targets, nbclasses=10):
-    truedensity = torch.zeros(nbclasses).cuda()
-    for i in range(nbclasses):
-        truedensity[i] = (targets == i).float().sum() / targets.shape[0]
-    return truedensity
+def logitTOdensity(logit, sizes):
+    sizes = torch.sqrt(sizes)
+    density = torch.zeros(200).cuda()
+
+    weight1 = torch.nn.functional.softmax(logit, dim=1) - 0.5
+    weigth2 = torch.nn.functional.relu(logit)
+    weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
+
+    for i in range(sizes.shape[0]):
+        if weight1[i] > 0:
+            density[sizes[i]] = weight1[i] + weigth2[i] + density[sizes[i]]
+
+    density = torch.nn.functional.avg_pool1d(
+        density, kernel_size=7, padding=3, stride=1
+    )
+    return normalize(density)
+
+
+def labelsT0density(targets, sizes):
+    sizes = torch.sqrt(sizes)
+    density = torch.zeros(200).cuda()
+
+    for i in range(sizes.shape[0]):
+        if targets[i] == 1:
+            density[sizes[i]] = 1 + density[sizes[i]]
+
+    density = torch.nn.functional.avg_pool1d(
+        density, kernel_size=7, padding=3, stride=1
+    )
+    return normalize(density)
 
 
 def extendedKL(estimatedensity, truedensity):
@@ -47,12 +68,11 @@ class TwoHead(torch.nn.Module):
         return self.fc1(x), estimatedensity
 
 
-class EurosatSplit(torch.utils.data.Dataset):
+class MDVD(torch.utils.data.Dataset):
     def __init__(self, flag):
         assert flag in ["train", "test"]
         self.flag = flag
-
-        Tr, Pa = True, "build/data"
+        self.root = "../selectivesearch/build/MDVD/" + flag
         if flag == "test":
             tmp = [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
         else:
@@ -63,21 +83,22 @@ class EurosatSplit(torch.utils.data.Dataset):
                 torchvision.transforms.RandomVerticalFlip(0.5),
                 torchvision.transforms.ToTensor(),
             ]
-        aug = torchvision.transforms.Compose(tmp)
+        self.aug = torchvision.transforms.Compose(tmp)
 
-        self.alldata = torchvision.datasets.EuroSAT(root=Pa, download=Tr, transform=aug)
-
-        if self.flag == "train":
-            self.size = len(self.alldata) * 2 // 3 - 2
-        else:
-            self.size = len(self.alldata) // 3 - 2
+        self.sizeP = len(os.listdir(self.root + "/good"))
+        self.sizeN = len(os.listdir(self.root + "/bad"))
 
     def __len__(self):
-        return self.size
+        return self.sizeP + self.sizeN
 
     def __getitem__(self, idx):
-        if self.flag == "test":
-            return self.alldata.__getitem__(idx * 3 + 2)
+        if idx < self.sizeN:
+            path = self.root + "/bad/" + str(idx) + ".pgn"
+            label = 0
         else:
-            lol = 3 * (idx // 2) + (idx % 2)  # thank oeis
-            return self.alldata.__getitem__(lol)
+            path = self.root + "/good/" + str(idx - self.sizeN) + ".pgn"
+            label = 1
+        image = torchvision.io.read_image(path)
+
+        size = image.shape[0] * image.shape[0] + image.shape[1] * image.shape[1]
+        return self.transform(image), label, size
