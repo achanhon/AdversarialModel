@@ -2,9 +2,6 @@ import os
 import csv
 import cv2
 
-cv2.setUseOptimized(True)
-cv2.setNumThreads(4)
-
 os.system("rm -r build")
 os.system("mkdir build")
 os.system("mkdir build/MDVD")
@@ -14,11 +11,18 @@ os.system("mkdir build/MDVD/train/bad build/MDVD/test/bad")
 
 
 def extractSelectiveSearchRect(image):
+    cv2.setUseOptimized(True)
+    cv2.setNumThreads(4)
+
+    w, h = image.shape[1] // 2, image.shape[0] // 2
+    image = cv2.resize(image, (w, h), interpolation=cv2.INTER_AREA)
+
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
     ss.setBaseImage(image)
     ss.switchToSelectiveSearchFast()
     rects = ss.process()
-    return rects
+
+    return [(2 * x, 2 * y, 2 * w, 2 * h) for (x, y, w, h) in rects]
 
 
 def getTrueRect(path):
@@ -91,6 +95,7 @@ for flag in ["train", "test"]:
         image = cv2.imread(data["root"] + name + ".JPG")
         predRects = extractSelectiveSearchRect(image)
         nbRects = len(predRects)
+        print(len(trueRects), nbRects)
 
         goodRects = set()
         for rect in trueRects:
