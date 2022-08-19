@@ -26,8 +26,18 @@ def getTrueRect(path):
         return []
 
     rects = []
-    with open(path, newline="") as csvfile:
+    with open(path, encoding="utf8", errors='ignore') as csvfile:
         lines = csv.reader(csvfile, delimiter=" ")
+        
+        tmp = []
+        I = len(lines)
+        for i in range(I):
+            try:
+                tmp.append(lines[i])
+            except Exception:
+                pass
+        lines = tmp
+        
         lines = lines[3:]
         for line in lines:
             xc = int(line[2])
@@ -66,9 +76,10 @@ def IoU(rectA, rectB):
     return (xmaxI - xminI) * (ymaxI - yminI) / (xmaxU - xminU) / (ymaxU - yminU)
 
 
-def exportRect(path, im):
+def exportRect(path, im, rect):
+    x, y, w, h = rect
     i = len(os.listdir(path))
-    cv2.imwrite(path + str(i) + ".png", img)
+    cv2.imwrite(path + str(i) + ".png", im[y : y + h, x : x + w, :])
 
 
 for flag in ["train", "test"]:
@@ -97,11 +108,7 @@ for flag in ["train", "test"]:
         goodRects = [predRects[i] for i in goodRects]
 
         print("export", name)
-        for (x, y, w, h) in badRects:
-            exportRect(
-                "build/MDVD/" + flag + "/bad/", image[y : y + h, x : x + w].copy()
-            )
-        for (x, y, w, h) in goodRects:
-            exportRect(
-                "build/MDVD/" + flag + "/good/", image[y : y + h, x : x + w].copy()
-            )
+        for rect in badRects:
+            exportRect("build/MDVD/" + flag + "/bad/", image, rect)
+        for rect in goodRects:
+            exportRect("build/MDVD/" + flag + "/good/", image, rect)
