@@ -1,4 +1,6 @@
 import os
+import PIL
+from PIL import Image
 import torch
 import torchvision
 
@@ -10,7 +12,7 @@ def normalize(positive_vect):
 
 def logitTOdensity(logit, sizes):
     sizes = torch.sqrt(sizes)
-    density = torch.zeros(200).cuda()
+    density = torch.zeros(300).cuda()
 
     weight1 = torch.nn.functional.softmax(logit, dim=1) - 0.5
     weigth2 = torch.nn.functional.relu(logit)
@@ -28,7 +30,7 @@ def logitTOdensity(logit, sizes):
 
 def labelsT0density(targets, sizes):
     sizes = torch.sqrt(sizes)
-    density = torch.zeros(200).cuda()
+    density = torch.zeros(300).cuda()
 
     for i in range(sizes.shape[0]):
         if targets[i] == 1:
@@ -78,10 +80,12 @@ class MDVD(torch.utils.data.Dataset):
         else:
             path = self.root + "/good/" + str(idx - self.sizeN) + ".png"
             label = 1
-        image = torchvision.io.read_image(path)
+        image = PIL.Image.open(path).convert("RGB").copy()
 
-        size = image.shape[0] * image.shape[0] + image.shape[1] * image.shape[1]
-        return self.transform(image), label  # , size
+        size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
+        if size > 300*300:
+            size = 300*300
+        return self.aug(image), label  , size
 
 
 import matplotlib.pyplot as plt
@@ -97,12 +101,14 @@ if __name__ == "__main__":
         s = torch.sqrt(s)
         for i in range(s.shape[0]):
             if y[i] == 1:
-                values.append(s)
-
+                values.append(s[i].item())
+        values = sorted(values)
         print(values)
 
-        s.hist(x, bins=200)
+        plt.hist(values, bins=50)
         plt.show()
+        
+        quit()
 
         density = labelsT0density(y, s)
         print(density)
