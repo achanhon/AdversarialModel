@@ -73,28 +73,21 @@ class MDVD(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         if idx < self.sizeN:
-            path = self.root + "/bad/" + str(idx) + ".pgn"
+            path = self.root + "/bad/" + str(idx) + ".png"
             label = 0
         else:
-            path = self.root + "/good/" + str(idx - self.sizeN) + ".pgn"
+            path = self.root + "/good/" + str(idx - self.sizeN) + ".png"
             label = 1
         image = torchvision.io.read_image(path)
 
         size = image.shape[0] * image.shape[0] + image.shape[1] * image.shape[1]
-        return self.transform(image), label, size
+        return self.transform(image), label  # , size
 
 
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    for i in range(49484):
-        if not os.path.exists("/home/achanhon/github/AdversarialModel/proportion/MDVD/selectivesearch/build/MDVD/train/bad/"+str(i)+".png"):
-            print(i)
-    for i in range(7039):
-        if not os.path.exists("/home/achanhon/github/AdversarialModel/proportion/MDVD/selectivesearch/build/MDVD/train/good/"+str(i)+".png"):
-            print(i)
-    
-    
+
     rawdata = MDVD("train")
     dataloader = torch.utils.data.DataLoader(rawdata, batch_size=256, shuffle=True)
 
