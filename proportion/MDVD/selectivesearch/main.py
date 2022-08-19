@@ -10,7 +10,7 @@ os.system("mkdir build/MDVD/train/good build/MDVD/test/good")
 os.system("mkdir build/MDVD/train/bad build/MDVD/test/bad")
 
 
-def extractSelectiveSearchRect(image):
+def extractSelectiveSearchRect(image, maxW, maxH):
     cv2.setUseOptimized(True)
     cv2.setNumThreads(4)
 
@@ -22,7 +22,8 @@ def extractSelectiveSearchRect(image):
     ss.switchToSelectiveSearchFast()
     rects = ss.process()
 
-    return [(2 * x, 2 * y, 2 * w, 2 * h) for (x, y, w, h) in rects]
+    rects = [(2 * x, 2 * y, 2 * w, 2 * h) for (x, y, w, h) in rects]
+    return [(x, y, w, h) for (x, y, w, h) in rects if w <= 3 * maxW and h <= 3 * maxH]
 
 
 def getTrueRect(path):
@@ -96,9 +97,11 @@ for flag in ["train", "test"]:
         trueRects = []
         for rad in data["vehicule"]:
             trueRects.extend(getTrueRect(data["root"] + name + rad))
+        maxW = max([w for (_, _, w, _) in trueRects])
+        maxH = max([h for (_, _, _, h) in trueRects])
 
         image = cv2.imread(data["root"] + name + ".JPG")
-        predRects = extractSelectiveSearchRect(image)
+        predRects = extractSelectiveSearchRect(image, maxW, maxH)
         predRects = predRects + trueRects
         nbRects = len(predRects)
         print(len(trueRects), nbRects)
