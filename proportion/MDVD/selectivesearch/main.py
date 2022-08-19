@@ -47,8 +47,8 @@ def getTrueRect(path):
         for line in lines:
             xc = int(line[2])
             yc = int(line[3])
-            w = int(line[4])
-            h = int(line[5])
+            w = int(line[4]) + 20
+            h = int(line[5]) + 20
             rects.append((xc - w / 2, yc - h / 2, w, h))
     return rects
 
@@ -75,6 +75,8 @@ def IoU(rectA, rectB):
 def exportRect(path, im, rect):
     x, y, w, h = rect
     x, y, w, h = int(x), int(y), int(w), int(h)
+    x, y = max(x, 0), max(y, 0)
+    w, h = min(w, image.shape[1] - x - 1), min(w, image.shape[0] - y - 1)
     i = len(os.listdir(path))
     cv2.imwrite(path + str(i) + ".png", im[y : y + h, x : x + w, :])
 
@@ -95,9 +97,6 @@ for flag in ["train", "test"]:
         for rad in data["vehicule"]:
             trueRects.extend(getTrueRect(data["root"] + name + rad))
 
-        for rect in trueRects:
-            print(IoU(rect, rect))
-
         image = cv2.imread(data["root"] + name + ".JPG")
         predRects = extractSelectiveSearchRect(image)
         predRects = predRects + trueRects
@@ -111,13 +110,11 @@ for flag in ["train", "test"]:
             alliou = alliou[::-1]
             for i in range(nbRects):
                 if alliou[i][0] > 0.1:
-                    goodRects.add(i)
+                    goodRects.add(alliou[i][1])
                 else:
                     break
 
         badRects = [predRects[i] for i in range(nbRects) if i not in goodRects]
-        badRects = sorted(badRects)
-        badRects = badRects[::2]
         goodRects = [predRects[i] for i in goodRects]
         print(len(goodRects), len(badRects))
 
