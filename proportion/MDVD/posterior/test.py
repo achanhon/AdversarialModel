@@ -60,7 +60,7 @@ with torch.no_grad():
     print("proportion test")
     averageKL = torch.zeros(2).cuda()
     for epoch in range(10):
-        for inputs, targets in testloader:
+        for inputs, targets, sizes in testloader:
             inputs, targets, sizes = inputs.cuda(), targets.cuda(), sizes.cuda()
 
             outputs = net(inputs)
