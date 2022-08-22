@@ -1,6 +1,14 @@
 import os
+import PIL
+from PIL import Image
 import torch
 import torchvision
+
+
+def smooth(vect):
+    return torch.nn.functional.avg_pool1d(
+        vect.unsqueeze(0), kernel_size=15, padding=7, stride=1
+    )[0]
 
 
 def normalize(positive_vect):
@@ -9,7 +17,7 @@ def normalize(positive_vect):
 
 
 def logitTOdensity(logit, sizes):
-    sizes = torch.sqrt(sizes)
+    sizes = torch.sqrt(sizes).int()
     density = torch.zeros(200).cuda()
 
     weight1 = torch.nn.functional.softmax(logit, dim=1) - 0.5
@@ -20,24 +28,18 @@ def logitTOdensity(logit, sizes):
         if weight1[i] > 0:
             density[sizes[i]] = weight1[i] + weigth2[i] + density[sizes[i]]
 
-    density = torch.nn.functional.avg_pool1d(
-        density, kernel_size=7, padding=3, stride=1
-    )
-    return normalize(density)
+    return normalize(smooth(density))
 
 
 def labelsT0density(targets, sizes):
-    sizes = torch.sqrt(sizes)
+    sizes = torch.sqrt(sizes).int()
     density = torch.zeros(200).cuda()
 
     for i in range(sizes.shape[0]):
         if targets[i] == 1:
             density[sizes[i]] = 1 + density[sizes[i]]
 
-    density = torch.nn.functional.avg_pool1d(
-        density, kernel_size=7, padding=3, stride=1
-    )
-    return normalize(density)
+    return normalize(smooth(density))
 
 
 def extendedKL(estimatedensity, truedensity):
@@ -46,26 +48,6 @@ def extendedKL(estimatedensity, truedensity):
     kl = torch.nn.functional.relu(kl)
     diff = estimatedensity - truedensity
     return kl + torch.sum(diff * diff) + diff.abs().sum()
-
-
-class TwoHead(torch.nn.Module):
-    def __init__(self, inputsize, outputsize):
-        super(TwoHead, self).__init__()
-        self.fc1 = torch.nn.Linear(inputsize, outputsize)
-        self.fc2 = torch.nn.Linear(inputsize * 2, outputsize)
-
-    def forward(self, x):
-        xm, _ = x.max(dim=0)
-        xa = x.mean(dim=0)
-        xma = torch.cat([xm, xa])
-        predensity = self.fc2(xma)
-
-        softmaxdensity = torch.nn.functional.softmax(predensity)
-        tmp = torch.nn.functional.relu(predensity) + softmaxdensity
-        total = tmp.sum()
-        estimatedensity = tmp / total
-
-        return self.fc1(x), estimatedensity
 
 
 class MDVD(torch.utils.data.Dataset):
@@ -93,12 +75,14 @@ class MDVD(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         if idx < self.sizeN:
-            path = self.root + "/bad/" + str(idx) + ".pgn"
+            path = self.root + "/bad/" + str(idx) + ".png"
             label = 0
         else:
-            path = self.root + "/good/" + str(idx - self.sizeN) + ".pgn"
+            path = self.root + "/good/" + str(idx - self.sizeN) + ".png"
             label = 1
-        image = torchvision.io.read_image(path)
+        image = PIL.Image.open(path).convert("RGB").copy()
 
-        size = image.shape[0] * image.shape[0] + image.shape[1] * image.shape[1]
-        return self.transform(image), label, size
+        size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
+        if size >= 200 * 200:
+            size = 200 * 200 - 1
+        return self.aug(image), label, size
