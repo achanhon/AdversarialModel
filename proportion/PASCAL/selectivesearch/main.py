@@ -9,11 +9,13 @@ os.system("mkdir build/PASCAL/train build/PASCAL/test")
 os.system("mkdir build/PASCAL/train/good build/PASCAL/test/good")
 os.system("mkdir build/PASCAL/train/bad build/PASCAL/test/bad")
 
-image = cv2.imread("/data/PASCALVOC/VOCdevkit/VOC2007/JPEGImages/000001.jpg")
+image = cv2.imread("/data/PASCALVOC/VOCdevkit/VOC2007/JPEGImages/000100.jpg")
 H,W = image.shape[0],image.shape[1]
-rects = numpy.loadtxt("/data/PASCALVOC/VOCdevkit/VOC2007/labels/000001.txt")
+rects = numpy.loadtxt("/data/PASCALVOC/VOCdevkit/VOC2007/labels/000100.txt")
+if len(rects.shape)==1:
+    rects = numpy.expand_dims(rects,axis=0)
 for rect in rects:
-    rowC,colC,h,w = rect[1],rect[2],rect[3],rect[4]
+    colC,rowC,w,h = rect[1],rect[2],rect[3],rect[4]
     rowC,colC,h,w = rowC*H,colC*W,h*H,w*W
     start = int(colC-w/2),int(rowC-h/2)
     end = int(colC+w/2),int(rowC+h/2)
