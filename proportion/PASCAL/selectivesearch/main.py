@@ -32,7 +32,7 @@ def getSample(i):
     return image,rects
         
  
-image,rects = getSample(1)
+image,rects = getSample(9)
 for rect in rects:
     start = rect[0:2]
     end = (rect[0]+rect[2],rect[1]+rect[3])
