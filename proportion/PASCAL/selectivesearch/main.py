@@ -18,7 +18,28 @@ def formatnumber(i):
 def formatRect(rect,H,W):
     colC,rowC,w,h = rect[1],rect[2],rect[3],rect[4]
     rowC,colC,h,w = rowC*H,colC*W,h*H,w*W
-    return int(colC),int(rowC),int(w),int(h)
+    return int(colC-w/2),int(rowC-h/2),int(w),int(h) 
+
+
+def getSample(i):
+    root = "/data/PASCALVOC/VOCdevkit/VOC2007"
+    image = cv2.imread(root+"/JPEGImages/"+formatnumber(i)+".jpg")
+    H,W = image.shape[0],image.shape[1]
+    rects = numpy.loadtxt(root+"/labels/"+formatnumber(i)+".txt")
+    if len(rects.shape)==1:
+        rects = numpy.expand_dims(rects,axis=0)
+    rects = [formatRect(rect,H,W) for rect in rects]
+    return image,rects
+        
+ 
+image,rects = getSample(1)
+for rect in rects:
+    start = rect[0:2]
+    end = (rect[0]+rect[2],rect[1]+rect[3])
+    tmp = cv2.rectangle(image, start,end, (255, 0, 0),2)
+cv2.imshow('Image', tmp) 
+q = cv2.waitKey(0)
+quit()
 
 def extractSelectiveSearchRect(image):
     cv2.setUseOptimized(True)
@@ -35,25 +56,6 @@ def extractSelectiveSearchRect(image):
     return [(2 * x, 2 * y, 2 * w, 2 * h) for (x, y, w, h) in rects]
 
 
-def getSample(i):
-    root = "/data/PASCALVOC/VOCdevkit/VOC2007/"
-    image = cv2.imread(root+"/JPEGImages/"+formatnumber(i)+".jpg")
-    H,W = image.shape[0],image.shape[1]
-    rects = numpy.loadtxt(root+"/labels/"+formatnumber(i)+".jpg")
-    if len(rects.shape)==1:
-        rects = numpy.expand_dims(rects,axis=0)
-    rects = [formatRect(rect,H,W) for rect in rects]
-    return image,rects
-        
- 
-image,rects = getSample(0)
-for rect in rects:
-    start = rects[0:2]
-    end = rects[0:2]+rect[2:4]
-    tmp = cv2.rectangle(image, start,end, (255, 0, 0),2)
-cv2.imshow('Image', tmp) 
-q = cv2.waitKey(0)
-quit()
 
 def IoU(rectA, rectB):
     x, y, w, h = rectA
