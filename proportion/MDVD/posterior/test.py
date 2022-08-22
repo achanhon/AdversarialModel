@@ -32,7 +32,7 @@ if len(sys.argv) > 2:
 
 print("load data")
 Bs = 256
-testset = density.EurosatSplit("test")
+testset = density.MDVD("test")
 testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=True)
 
 print("load model")
@@ -42,16 +42,15 @@ net.eval()
 
 with torch.no_grad():
     print("classical test")
-    cm = torch.zeros(10, 10).cuda()
-    for inputs, targets in testloader:
+    cm = torch.zeros(2, 2).cuda()
+    for inputs, targets, _ in testloader:
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
         _, predicted = outputs.max(1)
 
-        for i in range(10):
-            for j in range(10):
-                cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
+        for i, j in [(0, 0), (0, 1), (1, 0), (1, 1)]:
+            cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
 
     total = torch.sum(cm)
     accuracy = torch.sum(torch.diagonal(cm)) / total
@@ -62,12 +61,12 @@ with torch.no_grad():
     averageKL = torch.zeros(2).cuda()
     for epoch in range(10):
         for inputs, targets in testloader:
-            inputs, targets = inputs.cuda(), targets.cuda()
+            inputs, targets, sizes = inputs.cuda(), targets.cuda(), sizes.cuda()
 
             outputs = net(inputs)
 
-            estimatedensity = density.logitTOdensity(outputs)
-            truedensity = density.labelsTOdensity(targets)
+            estimatedensity = density.logitTOdensity(outputs, sizes)
+            truedensity = density.labelsT0density(targets, sizes)
             averageKL[0] += density.extendedKL(estimatedensity, truedensity)
             averageKL[1] += 1
 

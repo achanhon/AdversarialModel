@@ -1,7 +1,5 @@
-mv build/data data
 rm -r build
 mkdir build
-mv data build
 
 
 echo "VGG13"

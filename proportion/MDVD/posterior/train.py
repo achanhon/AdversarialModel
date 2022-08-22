@@ -16,7 +16,7 @@ if len(sys.argv) == 1:
 
 print("load data")
 Bs = 256
-trainset = density.EurosatSplit("train")
+trainset = density.MDVD("train")
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
@@ -29,21 +29,22 @@ if "resnet" in backbone:
         net = torchvision.models.resnet34(pretrained=True)
     net.avgpool = torch.nn.Identity()
     if backbone == "resnet50":
-        net.fc = torch.nn.Linear(2048, 10)
+        net.fc = torch.nn.Linear(2048, 2)
     else:
-        net.fc = torch.nn.Linear(512, 10)
+        net.fc = torch.nn.Linear(512, 2)
 else:
     if backbone == "vgg13":
         net = torchvision.models.vgg13(pretrained=True)
     else:
         net = torchvision.models.vgg16(pretrained=True)
     net.avgpool = torch.nn.Identity()
-    net.classifier = torch.nn.Linear(512, 10)
+    net.classifier = torch.nn.Linear(512, 2)
 net = net.cuda()
 net.train()
 
 print("train setting")
-criterion = torch.nn.CrossEntropyLoss()
+weights = torch.Tensor([1, 50]).cuda()
+criterion = torch.nn.CrossEntropyLoss(weights=weights)
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 nbepoch = 40
 
@@ -53,7 +54,7 @@ for epoch in range(nbepoch):
     net.train()
     total, correct = torch.zeros(1).cuda(), torch.zeros(1).cuda()
     printloss = torch.zeros(2).cuda()
-    for inputs, targets in trainloader:
+    for inputs, targets, _ in trainloader:
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
@@ -79,5 +80,5 @@ for epoch in range(nbepoch):
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.98 * total:
+    if correct > 0.99 * total:
         quit()
