@@ -38,7 +38,7 @@ def extractSelectiveSearchRect(image):
     cv2.setUseOptimized(True)
     cv2.setNumThreads(4)
 
-    w, h = image.shape[1] // 2, image.shape[0] // 2
+    w, h = image.shape[1] // 4, image.shape[0] // 4
     image = cv2.resize(image, (w, h), interpolation=cv2.INTER_AREA)
 
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
@@ -46,7 +46,7 @@ def extractSelectiveSearchRect(image):
     ss.switchToSelectiveSearchFast()
     rects = ss.process()
 
-    return [(2 * x, 2 * y, 2 * w, 2 * h) for (x, y, w, h) in rects]
+    return [(4 * x, 4 * y, 4 * w, 4 * h) for (x, y, w, h) in rects]
 
 
 def IoU(rectA, rectB):
@@ -81,7 +81,7 @@ for i in range(1, 9963):
     print(i)
     image, trueRects = getSample(i)
 
-    predRects = extractSelectiveSearchRect(image, maxW, maxH)
+    predRects = extractSelectiveSearchRect(image)
     predRects = predRects + trueRects
     nbRects = len(predRects)
     print(len(trueRects), nbRects)
@@ -92,14 +92,14 @@ for i in range(1, 9963):
         alliou = sorted(alliou)
         alliou = alliou[::-1]
         for i in range(nbRects):
-            if alliou[i][0] > 0.1:
+            if alliou[i][0] > 0.7:
                 goodRects.add(alliou[i][1])
             else:
                 break
 
     badRects = [predRects[i] for i in range(nbRects) if i not in goodRects]
     badRects = sorted(badRects)
-    badRects = badRects[::2]
+    badRects = badRects[::5]
     goodRects = [predRects[i] for i in goodRects]
     print(len(goodRects), len(badRects))
 
