@@ -103,7 +103,7 @@ for i in range(1, 9963):
     goodRects = [predRects[i] for i in goodRects]
     print(len(goodRects), len(badRects))
 
-    if i % 3 == 1:
+    if i % 3 != 1:
         flag = "test"
     else:
         flag = "train"
