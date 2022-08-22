@@ -92,14 +92,14 @@ for i in range(1, 9963):
         alliou = sorted(alliou)
         alliou = alliou[::-1]
         for i in range(nbRects):
-            if alliou[i][0] > 0.7:
+            if alliou[i][0] > 0.8:
                 goodRects.add(alliou[i][1])
             else:
                 break
 
     badRects = [predRects[i] for i in range(nbRects) if i not in goodRects]
     badRects = sorted(badRects)
-    badRects = badRects[::5]
+    badRects = badRects[::10]
     goodRects = [predRects[i] for i in goodRects]
     print(len(goodRects), len(badRects))
 
