@@ -9,20 +9,16 @@ os.system("mkdir build/PASCAL/train build/PASCAL/test")
 os.system("mkdir build/PASCAL/train/good build/PASCAL/test/good")
 os.system("mkdir build/PASCAL/train/bad build/PASCAL/test/bad")
 
-image = cv2.imread("/data/PASCALVOC/VOCdevkit/VOC2007/JPEGImages/000100.jpg")
-H,W = image.shape[0],image.shape[1]
-rects = numpy.loadtxt("/data/PASCALVOC/VOCdevkit/VOC2007/labels/000100.txt")
-if len(rects.shape)==1:
-    rects = numpy.expand_dims(rects,axis=0)
-for rect in rects:
+def formatnumber(i):
+    s =str(i)
+    while len(s)<6:
+        s = "0"+s
+    return s
+
+def formatRect(rect,H,W):
     colC,rowC,w,h = rect[1],rect[2],rect[3],rect[4]
     rowC,colC,h,w = rowC*H,colC*W,h*H,w*W
-    start = int(colC-w/2),int(rowC-h/2)
-    end = int(colC+w/2),int(rowC+h/2)
-    tmp = cv2.rectangle(image, start,end, (255, 0, 0),2)
-cv2.imshow('Image', tmp) 
-q = cv2.waitKey(0)
-quit()
+    return int(colC),int(rowC),int(w),int(h)
 
 def extractSelectiveSearchRect(image):
     cv2.setUseOptimized(True)
@@ -39,33 +35,25 @@ def extractSelectiveSearchRect(image):
     return [(2 * x, 2 * y, 2 * w, 2 * h) for (x, y, w, h) in rects]
 
 
-def getTrueRect(path):
-    if not os.path.exists(path):
-        return []
-
-    rects = []
-    with open(path, encoding="utf8", errors="ignore") as csvfile:
-        tmp = csv.reader(csvfile, delimiter=" ")
-
-        lines = []
-        i = iter(tmp)
-        while True:
-            try:
-                line = next(i)
-                if len(line) < 5 or line[0][0] == "@" or line[0][0] == "#":
-                    continue
-                lines.append(line)
-            except Exception:
-                break
-
-        for line in lines:
-            xc = int(line[2])
-            yc = int(line[3])
-            w = int(line[4]) + 20
-            h = int(line[5]) + 20
-            rects.append((xc - w / 2, yc - h / 2, w, h))
-    return rects
-
+def getSample(i):
+    root = "/data/PASCALVOC/VOCdevkit/VOC2007/"
+    image = cv2.imread(root+"/JPEGImages/"+formatnumber(i)+".jpg")
+    H,W = image.shape[0],image.shape[1]
+    rects = numpy.loadtxt(root+"/labels/"+formatnumber(i)+".jpg")
+    if len(rects.shape)==1:
+        rects = numpy.expand_dims(rects,axis=0)
+    rects = [formatRect(rect,H,W) for rect in rects]
+    return image,rects
+        
+ 
+image,rects = getSample(0)
+for rect in rects:
+    start = rects[0:2]
+    end = rects[0:2]+rect[2:4]
+    tmp = cv2.rectangle(image, start,end, (255, 0, 0),2)
+cv2.imshow('Image', tmp) 
+q = cv2.waitKey(0)
+quit()
 
 def IoU(rectA, rectB):
     x, y, w, h = rectA
