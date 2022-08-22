@@ -59,7 +59,7 @@ class MDVD(torch.utils.data.Dataset):
             tmp = [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
         else:
             tmp = [
-                torchvision.transforms.RandomResizedCrop(32),
+                torchvision.transforms.Resize(32),
                 torchvision.transforms.RandomRotation(90),
                 torchvision.transforms.RandomHorizontalFlip(0.5),
                 torchvision.transforms.RandomVerticalFlip(0.5),
