@@ -56,10 +56,13 @@ class MDVD(torch.utils.data.Dataset):
         self.flag = flag
         self.root = "../selectivesearch/build/MDVD/" + flag
         if flag == "test":
-            tmp = [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
+            tmp = [
+                torchvision.transforms.Resize((32, 32)),
+                torchvision.transforms.ToTensor(),
+            ]
         else:
             tmp = [
-                torchvision.transforms.Resize(32),
+                torchvision.transforms.Resize((32, 32)),
                 torchvision.transforms.RandomRotation(90),
                 torchvision.transforms.RandomHorizontalFlip(0.5),
                 torchvision.transforms.RandomVerticalFlip(0.5),
