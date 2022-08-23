@@ -43,7 +43,7 @@ net = net.cuda()
 net.train()
 
 print("train setting")
-weight = torch.Tensor([1, 50]).cuda()
+weight = torch.Tensor([1, 10]).cuda()
 criterion = torch.nn.CrossEntropyLoss(weight=weight)
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 nbepoch = 40

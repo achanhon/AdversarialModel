@@ -84,8 +84,8 @@ def exportRect(path, im, rect):
 
 data = {}
 data["root"] = "/data/MunichDatasetVehicleDetection/Train/2012-04-26-Muenchen-Tunnel_"
-data["train"] = ["4K0G0010", "4K0G0020", "4K0G0030", "4K0G0040", "4K0G0051"]
-data["test"] = ["4K0G0060", "4K0G0070", "4K0G0080", "4K0G0090", "4K0G0100"]
+data["test"] = ["4K0G0010", "4K0G0020", "4K0G0030", "4K0G0040", "4K0G0051"]
+data["train"] = ["4K0G0060", "4K0G0070", "4K0G0080", "4K0G0090", "4K0G0100"]
 data["vehicule"] = ["bus", "cam", "pkw", "truck", "van"]
 tmp = [rad + "_trail" for rad in data["vehicule"]]
 data["vehicule"] = data["vehicule"] + tmp
