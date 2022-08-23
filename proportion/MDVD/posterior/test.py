@@ -22,7 +22,7 @@ if len(sys.argv) > 2:
     inputs = torch.Tensor(inputs)
     mean = inputs.mean()
     var = inputs.var()
-    meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")"
+    meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")\n"
     with open(outputpath, "w") as f:
         f.write(meanvar)
     f.close()
