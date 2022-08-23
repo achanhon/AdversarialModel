@@ -59,31 +59,36 @@ with torch.no_grad():
     print("test accuracy=", accuracy)
 
     print("proportion test")
-    averageKL = torch.zeros(2).cuda()
-    averageKLsele = torch.zeros(2).cuda()
-    averageKLfair = torch.zeros(2).cuda()
+    total = 0
+    averageKL = 0
+    averageKLsele = 0
+    averageKLfair = 0
     for epoch in range(10):
         for inputs, targets, sizes in testloader:
-            inputs, targets, sizes = inputs.cuda(), targets.cuda(), sizes.cuda()
+            sizes = torch.sqrt(sizes).int()
+            inputs = inputs.cuda()
 
-            outputs = net(inputs)
+            outputs = net(inputs).cpu()
+
+            truedensity = density.labelsT0density(targets, sizes)
 
             estimatedensity = density.logitTOdensity(outputs, sizes)
             withrejection = density.selectivelogitTOdensity(outputs, sizes)
             withfairness = estimatedensity.clone() * weights
             withfairness = normalize(withfairness)
 
-            truedensity = density.labelsT0density(targets, sizes)
-            averageKL[0] += density.extendedKL(estimatedensity, truedensity)
-            averageKL[1] += 1
-            averageKLsele[0] += density.extendedKL(withrejection, truedensity)
-            averageKLsele[1] += 1
-            averageKLfair[0] += density.extendedKL(withfairness, truedensity)
-            averageKLfair[1] += 1
+            averageKL = density.extendedKL(estimatedensity, truedensity) + averageKL
+            averageKLsele = (
+                density.extendedKL(withrejection, truedensity) + averageKLsele
+            )
+            averageKLfair = (
+                density.extendedKL(withfairness, truedensity) + averageKLfair
+            )
+            total += 1
 
-    averageKL = averageKL[0] / averageKL[1]
-    averageKLselected = averageKLselected[0] / averageKLselected[1]
-    averageKLfair = averageKLfair[0] / averageKLfair[1]
+    averageKL = averageKL / total
+    averageKLselected = averageKLselected / total
+    averageKLfair = averageKLfair / total
     torch.save(averageKL, "build/baseline_" + sys.argv[1])
     torch.save(averageKLselected, "build/selective_" + sys.argv[1])
     torch.save(averageKLfair, "build/fair_" + sys.argv[1])
