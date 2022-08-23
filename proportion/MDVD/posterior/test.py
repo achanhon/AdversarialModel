@@ -85,6 +85,6 @@ with torch.no_grad():
     averageKLselected = averageKLselected[0] / averageKLselected[1]
     averageKLfair = averageKLfair[0] / averageKLfair[1]
     torch.save(averageKL, "build/baseline_" + sys.argv[1])
-    torch.save(averageKLselected, "build/selective_" + sys.argv[2])
-    torch.save(averageKLfair, "build/fair_" + sys.argv[2])
+    torch.save(averageKLselected, "build/selective_" + sys.argv[1])
+    torch.save(averageKLfair, "build/fair_" + sys.argv[1])
     print("test divergence=", averageKL, averageKLselected, averageKLfair)
