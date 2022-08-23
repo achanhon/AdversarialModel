@@ -59,37 +59,28 @@ with torch.no_grad():
     print("test accuracy=", accuracy)
 
     print("proportion test")
-    total = 0
-    averageKL = 0
-    averageKLsele = 0
-    averageKLfair = 0
+    total, averageKL, KLsele, KLfair = 0, 0, 0, 0
     for epoch in range(10):
         for inputs, targets, sizes in testloader:
             sizes = torch.sqrt(sizes).int()
-            inputs = inputs.cuda()
-
-            outputs = net(inputs).cpu()
-
             truedensity = density.labelsT0density(targets, sizes)
+
+            inputs = inputs.cuda()
+            outputs = net(inputs).cpu()
 
             estimatedensity = density.logitTOdensity(outputs, sizes)
             withrejection = density.selectivelogitTOdensity(outputs, sizes)
-            withfairness = estimatedensity.clone() * weights
-            withfairness = normalize(withfairness)
+            withfairness = normalize(estimatedensity.clone() * weights)
 
             averageKL = density.extendedKL(estimatedensity, truedensity) + averageKL
-            averageKLsele = (
-                density.extendedKL(withrejection, truedensity) + averageKLsele
-            )
-            averageKLfair = (
-                density.extendedKL(withfairness, truedensity) + averageKLfair
-            )
+            KLsele = density.extendedKL(withrejection, truedensity) + KLsele
+            KLfair = density.extendedKL(withfairness, truedensity) + KLfair
             total += 1
 
     averageKL = averageKL / total
-    averageKLselected = averageKLselected / total
-    averageKLfair = averageKLfair / total
+    KLsele = KLsele / total
+    KLfair = KLfair / total
     torch.save(averageKL, "build/baseline_" + sys.argv[1])
-    torch.save(averageKLselected, "build/selective_" + sys.argv[1])
-    torch.save(averageKLfair, "build/fair_" + sys.argv[1])
-    print("test divergence=", averageKL, averageKLselected, averageKLfair)
+    torch.save(KLsele, "build/selective_" + sys.argv[1])
+    torch.save(KLfair, "build/fair_" + sys.argv[1])
+    print("test divergence=", averageKL, KLsele, KLfair)

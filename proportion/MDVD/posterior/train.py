@@ -80,28 +80,27 @@ for epoch in range(nbepoch):
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.99 * total:
+    if correct > 0.98 * total:
         break
 
 print("reweighting")
 with torch.no_grad():
-    preddensity = []
-    truedensity = []
+    truedensity, preddensity = [], []
     for inputs, targets, sizes in trainloader:
-        inputs, targets, sizes = inputs.cuda(), targets.cuda(), sizes.cuda()
+        sizes = torch.sqrt(sizes).int()
+
+        I = [i for i in range(sizes.shape[0]) if targets[i] == 1]
+        truedensity.extend([sizes[i] for i in I])
+
+        inputs = inputs.cuda()
         outputs = net(inputs)
 
-        for i in range(sizes.shape[0]):
-            if targets[i] == 1:
-                truedensity.append(sizes[i])
-            if outputs[i][1] > outputs[i][0]:
-                preddensity.append((outputs[i], sizes[i]))
+        I = [i for i in range(sizes.shape[0]) if outputs[i][1] > outputs[i][0]]
+        preddensity.extend([(outputs[i], sizes[i]) for i in I])
 
-    truedensity = torch.Tensor(truedensity)
-    truedensity = torch.sqrt(truedensity).int()
-    tmp = torch.zeros(200).cuda()
-    for i in range(truedensity.shape[0]):
-        tmp[truedensity[i]] = 1 + tmp[truedensity[i]]
+    tmp = torch.zeros(200)
+    for i in range(len(truedensity)):
+        tmp[truedensity[i]] += 1
     truedensity = normalize(smooth(tmp))
 
     logit = [i for i, _ in preddensity]
@@ -109,14 +108,12 @@ with torch.no_grad():
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
     weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
+    weigth2 = weigth2 + weight1
 
     preddensity = [i for _, i in preddensity]
-    preddensity = torch.Tensor(preddensity)
-    preddensity = torch.sqrt(preddensity).int()
-
-    tmp = torch.ones(200).cuda() * 0.00001
-    for i in range(logit.shape[0]):
-        tmp[preddensity[i]] += weight1[i] + weigth2[i]
+    tmp = torch.ones(200) * 0.00001
+    for i in range(len(preddensity)):
+        tmp[preddensity[i]] += weigth2[i]
     preddensity = normalize(smooth(tmp))
 
     torch.save(truedensity / preddensity, "build/model_externalweigths.pth")

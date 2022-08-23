@@ -22,12 +22,11 @@ def logitTOdensity(logit, sizes):
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
     weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
-
     weigth2 = weigth2 + weight1
 
-    for i in range(sizes.shape[0]):
-        if weight1[i] > 0:
-            density[sizes[i]] = weigth2[i] + density[sizes[i]]
+    I = [i for i in range(sizes.shape[0]) if weight1[i] > 0]
+    for i in I:
+        density[sizes[i]] = weigth2[i] + density[sizes[i]]
 
     return normalize(smooth(density))
 
@@ -38,16 +37,16 @@ def selectivelogitTOdensity(logit, sizes):
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
     weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
+    weigth2 = weigth2 + weight1
 
-    kept = []
-    for i in range(weight1.shape[0]):
-        if weight1[i] > 0.5:
-            kept.append((weight1[i] - 0.5, i))
+    kept = [(weight1[i] - 0.5, i) for i in range(weight1.shape[0])]
+    kept = [(i, j) for i, j in kept if i > 0]
     kept = sorted(kept)
     kept = kept[int(0.2 * len(kept)) :]
+    kept = [i for _, i in kept]
 
     for i in kept:
-        density[sizes[i]] = weight1[i] + weigth2[i] + density[sizes[i]]
+        density[sizes[i]] = weigth2[i] + density[sizes[i]]
 
     return normalize(smooth(density))
 
@@ -55,9 +54,9 @@ def selectivelogitTOdensity(logit, sizes):
 def labelsT0density(targets, sizes):
     density = torch.zeros(200)
 
-    for i in range(sizes.shape[0]):
-        if targets[i] == 1:
-            density[sizes[i]] = 1 + density[sizes[i]]
+    I = [i for i in range(sizes.shape[0]) if targets[i] == 1]
+    for i in I:
+        density[sizes[i]] = 1 + density[sizes[i]]
 
     return normalize(smooth(density))
 
