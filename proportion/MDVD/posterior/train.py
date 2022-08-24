@@ -93,7 +93,7 @@ with torch.no_grad():
         truedensity.extend([sizes[i] for i in I])
 
         inputs = inputs.cuda()
-        outputs = net(inputs)
+        outputs = net(inputs).cpu()
 
         I = [i for i in range(sizes.shape[0]) if outputs[i][1] > outputs[i][0]]
         preddensity.extend([(outputs[i], sizes[i]) for i in I])
