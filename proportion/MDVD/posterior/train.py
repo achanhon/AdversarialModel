@@ -114,6 +114,6 @@ with torch.no_grad():
     tmp = torch.ones(200) * 0.00001
     for i in range(len(preddensity)):
         tmp[preddensity[i]] += weigth2[i]
-    preddensity = normalize(smooth(tmp))
+    preddensity = density.normalize(density.smooth(tmp))
 
     torch.save(truedensity / preddensity, "build/model_externalweigths.pth")
