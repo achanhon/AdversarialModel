@@ -1,6 +1,31 @@
 import os
 import PIL
 from PIL import Image
+import numpy
+
+
+l = os.listdir(
+    "/home/achanhon/github/AdversarialModel/proportion/PASCAL/selectivesearch/build/PASCAL/train/good"
+)
+sizes = []
+for name in l:
+    image = (
+        PIL.Image.open(
+            "/home/achanhon/github/AdversarialModel/proportion/PASCAL/selectivesearch/build/PASCAL/train/good/"
+            + name
+        )
+        .convert("RGB")
+        .copy()
+    )
+    size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
+    sizes.append(size)
+
+sizes = numpy.asarray(sizes)
+sizes = numpy.sqrt(sizes).int()
+print(numpy.mean(sizes), numpy.var(sizes), numpy.max(sizes))
+quit()
+
+
 import torch
 import torchvision
 
@@ -71,24 +96,15 @@ def extendedKL(estimatedensity, truedensity):
     return kl + torch.sum(diff * diff) + diff.abs().sum()
 
 
-class MDVD(torch.utils.data.Dataset):
+class PASCAL(torch.utils.data.Dataset):
     def __init__(self, flag):
         assert flag in ["train", "test"]
         self.flag = flag
-        self.root = "../selectivesearch/build/MDVD/" + flag
-        if flag == "test":
-            tmp = [
-                torchvision.transforms.Resize((32, 32)),
-                torchvision.transforms.ToTensor(),
-            ]
-        else:
-            tmp = [
-                torchvision.transforms.Resize((32, 32)),
-                torchvision.transforms.RandomRotation(90),
-                torchvision.transforms.RandomHorizontalFlip(0.5),
-                torchvision.transforms.RandomVerticalFlip(0.5),
-                torchvision.transforms.ToTensor(),
-            ]
+        self.root = "../selectivesearch/build/PASCAL/" + flag
+        tmp = [
+            torchvision.transforms.Resize((32, 32)),
+            torchvision.transforms.ToTensor(),
+        ]
         self.aug = torchvision.transforms.Compose(tmp)
 
         self.sizeP = len(os.listdir(self.root + "/good"))
