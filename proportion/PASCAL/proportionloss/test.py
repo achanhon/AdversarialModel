@@ -32,7 +32,7 @@ if len(sys.argv) > 2:
 
 print("load data")
 Bs = 256
-testset = density.MDVD("test")
+testset = density.PASCAL("test")
 testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=True)
 
 print("load model")

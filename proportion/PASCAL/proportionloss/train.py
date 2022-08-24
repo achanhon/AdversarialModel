@@ -16,7 +16,7 @@ if len(sys.argv) == 1:
 
 print("load data")
 Bs = 256
-trainset = density.MDVD("train")
+trainset = density.PASCAL("train")
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
