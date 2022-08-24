@@ -16,7 +16,7 @@ if len(sys.argv) == 1:
 
 print("load data")
 Bs = 256
-trainset = density.MDVD("train")
+trainset = density.PASCAL("train")
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=Bs, shuffle=True)
 
 print("load model")
@@ -80,5 +80,40 @@ for epoch in range(nbepoch):
 
     torch.save(net, "build/model.pth")
     print("train accuracy=", 100.0 * correct / total)
-    if correct > 0.99 * total:
-        quit()
+    if correct > 0.98 * total:
+        break
+
+print("reweighting")
+with torch.no_grad():
+    truedensity, preddensity = [], []
+    for inputs, targets, sizes in trainloader:
+        sizes = torch.sqrt(sizes).int()
+
+        I = [i for i in range(sizes.shape[0]) if targets[i] == 1]
+        truedensity.extend([sizes[i] for i in I])
+
+        inputs = inputs.cuda()
+        outputs = net(inputs).cpu()
+
+        I = [i for i in range(sizes.shape[0]) if outputs[i][1] > outputs[i][0]]
+        preddensity.extend([(outputs[i], sizes[i]) for i in I])
+
+    tmp = torch.zeros(450)
+    for i in range(len(truedensity)):
+        tmp[truedensity[i]] += 1
+    truedensity = density.normalize(density.smooth(tmp))
+
+    logit = [i for i, _ in preddensity]
+    logit = torch.stack(logit, dim=0)
+    weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
+    weigth2 = torch.nn.functional.relu(logit)
+    weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
+    weigth2 = weigth2 + weight1
+
+    preddensity = [i for _, i in preddensity]
+    tmp = torch.ones(450) * 0.00001
+    for i in range(len(preddensity)):
+        tmp[preddensity[i]] += weigth2[i]
+    preddensity = density.normalize(density.smooth(tmp))
+
+    torch.save(truedensity / preddensity, "build/model_externalweigths.pth")

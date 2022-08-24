@@ -22,7 +22,7 @@ if len(sys.argv) > 2:
     inputs = torch.Tensor(inputs)
     mean = inputs.mean()
     var = inputs.var()
-    meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")"
+    meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")\n"
     with open(outputpath, "w") as f:
         f.write(meanvar)
     f.close()
@@ -32,7 +32,7 @@ if len(sys.argv) > 2:
 
 print("load data")
 Bs = 256
-testset = density.MDVD("test")
+testset = density.PASCAL("test")
 testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=True)
 
 print("load model")
@@ -59,32 +59,28 @@ with torch.no_grad():
     print("test accuracy=", accuracy)
 
     print("proportion test")
-    averageKL = torch.zeros(2).cuda()
-    averageKLsele = torch.zeros(2).cuda()
-    averageKLfair = torch.zeros(2).cuda()
+    total, averageKL, KLsele, KLfair = 0, 0, 0, 0
     for epoch in range(10):
         for inputs, targets, sizes in testloader:
-            inputs, targets, sizes = inputs.cuda(), targets.cuda(), sizes.cuda()
+            sizes = torch.sqrt(sizes).int()
+            truedensity = density.labelsT0density(targets, sizes)
 
-            outputs = net(inputs)
+            inputs = inputs.cuda()
+            outputs = net(inputs).cpu()
 
             estimatedensity = density.logitTOdensity(outputs, sizes)
             withrejection = density.selectivelogitTOdensity(outputs, sizes)
-            withfairness = estimatedensity.clone() * weights
-            withfairness = normalize(withfairness)
+            withfairness = density.normalize(estimatedensity.clone() * weights)
 
-            truedensity = density.labelsT0density(targets, sizes)
-            averageKL[0] += density.extendedKL(estimatedensity, truedensity)
-            averageKL[1] += 1
-            averageKLsele[0] += density.extendedKL(withrejection, truedensity)
-            averageKLsele[1] += 1
-            averageKLfair[0] += density.extendedKL(withfairness, truedensity)
-            averageKLfair[1] += 1
+            averageKL = density.extendedKL(estimatedensity, truedensity) + averageKL
+            KLsele = density.extendedKL(withrejection, truedensity) + KLsele
+            KLfair = density.extendedKL(withfairness, truedensity) + KLfair
+            total += 1
 
-    averageKL = averageKL[0] / averageKL[1]
-    averageKLselected = averageKLselected[0] / averageKLselected[1]
-    averageKLfair = averageKLfair[0] / averageKLfair[1]
+    averageKL = averageKL / total
+    KLsele = KLsele / total
+    KLfair = KLfair / total
     torch.save(averageKL, "build/baseline_" + sys.argv[1])
-    torch.save(averageKLselected, "build/selective_" + sys.argv[1])
-    torch.save(averageKLfair, "build/fair_" + sys.argv[1])
-    print("test divergence=", averageKL, averageKLselected, averageKLfair)
+    torch.save(KLsele, "build/selective_" + sys.argv[1])
+    torch.save(KLfair, "build/fair_" + sys.argv[1])
+    print("test divergence=", averageKL, KLsele, KLfair)

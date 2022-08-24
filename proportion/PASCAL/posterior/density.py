@@ -7,7 +7,7 @@ import torchvision
 
 def smooth(vect):
     return torch.nn.functional.avg_pool1d(
-        vect.unsqueeze(0), kernel_size=15, padding=7, stride=1
+        vect.unsqueeze(0), kernel_size=31, padding=15, stride=1
     )[0]
 
 
@@ -17,48 +17,45 @@ def normalize(positive_vect):
 
 
 def logitTOdensity(logit, sizes):
-    sizes = torch.sqrt(sizes).int()
     density = torch.zeros(450)
 
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
     weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
+    weigth2 = weigth2 + weight1
 
-    for i in range(sizes.shape[0]):
-        if weight1[i] > 0:
-            density[sizes[i]] = weight1[i] + weigth2[i] + density[sizes[i]]
+    I = [i for i in range(sizes.shape[0]) if weight1[i] > 0]
+    for i in I:
+        density[sizes[i]] = weigth2[i] + density[sizes[i]]
 
     return normalize(smooth(density))
 
 
 def selectivelogitTOdensity(logit, sizes):
-    sizes = torch.sqrt(sizes).int()
     density = torch.zeros(450)
 
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
     weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
+    weigth2 = weigth2 + weight1
 
-    kept = []
-    for i in range(weight1.shape[0]):
-        if weight1[i] > 0.5:
-            kept.append((weight1[i] - 0.5, i))
+    kept = [(weight1[i], i) for i in range(weight1.shape[0]) if weight1[i] > 0]
     kept = sorted(kept)
-    kept = kept[int(0.2 * len(kept)) :]
+    kept = kept[len(kept) // 5 :]
+    kept = [i for _, i in kept]
 
     for i in kept:
-        density[sizes[i]] = weight1[i] + weigth2[i] + density[sizes[i]]
+        density[sizes[i]] = weigth2[i] + density[sizes[i]]
 
     return normalize(smooth(density))
 
 
 def labelsT0density(targets, sizes):
-    sizes = torch.sqrt(sizes).int()
     density = torch.zeros(450)
 
-    for i in range(sizes.shape[0]):
-        if targets[i] == 1:
-            density[sizes[i]] = 1 + density[sizes[i]]
+    I = [i for i in range(sizes.shape[0]) if targets[i] == 1]
+    for i in I:
+        density[sizes[i]] = 1 + density[sizes[i]]
 
     return normalize(smooth(density))
 
@@ -80,6 +77,7 @@ class PASCAL(torch.utils.data.Dataset):
             torchvision.transforms.Resize((32, 32)),
             torchvision.transforms.ToTensor(),
         ]
+
         self.aug = torchvision.transforms.Compose(tmp)
 
         self.sizeP = len(os.listdir(self.root + "/good"))
