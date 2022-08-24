@@ -55,13 +55,14 @@ for epoch in range(nbepoch):
     total, correct = torch.zeros(1).cuda(), torch.zeros(1).cuda()
     printloss = torch.zeros(2).cuda()
     for inputs, targets, sizes in trainloader:
+        sizes = torch.sqrt(sizes).int()
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
         primaryloss = criterion(outputs, targets)
-        
-        estimatedensity = density.logitTOdensity(outputs.cpu(),sizes)
-        truedensity = density.labelsTOdensity(targets.cpu(),sizes)
+
+        estimatedensity = density.logitTOdensity(outputs.cpu(), sizes)
+        truedensity = density.labelsTOdensity(targets.cpu(), sizes)
         secondaryloss = density.extendedKL(estimatedensity, truedensity)
 
         loss = primaryloss + secondaryloss

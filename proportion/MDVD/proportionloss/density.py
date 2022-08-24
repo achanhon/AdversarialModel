@@ -31,7 +31,6 @@ def logitTOdensity(logit, sizes):
     return normalize(smooth(density))
 
 
-
 def labelsT0density(targets, sizes):
     density = torch.zeros(200)
 
