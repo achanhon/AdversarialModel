@@ -70,7 +70,7 @@ with torch.no_grad():
 
             estimatedensity = density.logitTOdensity(outputs, sizes)
             withrejection = density.selectivelogitTOdensity(outputs, sizes)
-            withfairness = normalize(estimatedensity.clone() * weights)
+            withfairness = density.normalize(estimatedensity.clone() * weights)
 
             averageKL = density.extendedKL(estimatedensity, truedensity) + averageKL
             KLsele = density.extendedKL(withrejection, truedensity) + KLsele
