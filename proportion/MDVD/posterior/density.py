@@ -39,10 +39,9 @@ def selectivelogitTOdensity(logit, sizes):
     weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
     weigth2 = weigth2 + weight1
 
-    kept = [(weight1[i] - 0.5, i) for i in range(weight1.shape[0])]
-    kept = [(i, j) for i, j in kept if i > 0]
+    kept = [(weight1[i], i) for i in range(weight1.shape[0]) if weight1[i] > 0]
     kept = sorted(kept)
-    kept = kept[int(0.2 * len(kept)) :]
+    kept = kept[len(kept) // 5 :]
     kept = [i for _, i in kept]
 
     for i in kept:
