@@ -21,8 +21,15 @@ for name in l:
     sizes.append(size)
 
 sizes = numpy.asarray(sizes)
-sizes = numpy.sqrt(sizes).int()
+sizes = numpy.sqrt(sizes)
 print(numpy.mean(sizes), numpy.var(sizes), numpy.max(sizes))
+print(numpy.median(sizes))
+print(sizes.shape)
+sizes = sizes[sizes>numpy.median(sizes)]
+print(numpy.mean(sizes), numpy.var(sizes), numpy.max(sizes))
+sizes = sizes[sizes>400]
+print(sizes.shape)
+
 quit()
 
 
