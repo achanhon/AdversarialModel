@@ -1,38 +1,6 @@
 import os
 import PIL
 from PIL import Image
-import numpy
-
-
-l = os.listdir(
-    "/home/achanhon/github/AdversarialModel/proportion/PASCAL/selectivesearch/build/PASCAL/train/good"
-)
-sizes = []
-for name in l:
-    image = (
-        PIL.Image.open(
-            "/home/achanhon/github/AdversarialModel/proportion/PASCAL/selectivesearch/build/PASCAL/train/good/"
-            + name
-        )
-        .convert("RGB")
-        .copy()
-    )
-    size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
-    sizes.append(size)
-
-sizes = numpy.asarray(sizes)
-sizes = numpy.sqrt(sizes)
-print(numpy.mean(sizes), numpy.var(sizes),numpy.min(sizes), numpy.max(sizes))
-print(numpy.median(sizes))
-print(sizes.shape)
-sizes = sizes[sizes>numpy.median(sizes)]
-print(numpy.mean(sizes), numpy.var(sizes), numpy.max(sizes))
-sizes = sizes[sizes>400]
-print(sizes.shape)
-
-quit()
-
-
 import torch
 import torchvision
 
@@ -50,7 +18,7 @@ def normalize(positive_vect):
 
 def logitTOdensity(logit, sizes):
     sizes = torch.sqrt(sizes).int()
-    density = torch.zeros(200).cuda()
+    density = torch.zeros(450)
 
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
@@ -65,7 +33,7 @@ def logitTOdensity(logit, sizes):
 
 def selectivelogitTOdensity(logit, sizes):
     sizes = torch.sqrt(sizes).int()
-    density = torch.zeros(200).cuda()
+    density = torch.zeros(450)
 
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
@@ -86,7 +54,7 @@ def selectivelogitTOdensity(logit, sizes):
 
 def labelsT0density(targets, sizes):
     sizes = torch.sqrt(sizes).int()
-    density = torch.zeros(200).cuda()
+    density = torch.zeros(450)
 
     for i in range(sizes.shape[0]):
         if targets[i] == 1:
@@ -130,6 +98,6 @@ class PASCAL(torch.utils.data.Dataset):
         image = PIL.Image.open(path).convert("RGB").copy()
 
         size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
-        if size >= 200 * 200:
-            size = 200 * 200 - 1
+        if size >= 450 * 450:
+            size = 450 * 450 - 1
         return self.aug(image), label, size
