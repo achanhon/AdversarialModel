@@ -101,7 +101,7 @@ with torch.no_grad():
     tmp = torch.zeros(200)
     for i in range(len(truedensity)):
         tmp[truedensity[i]] += 1
-    truedensity = normalize(smooth(tmp))
+    truedensity = density.normalize(density.smooth(tmp))
 
     logit = [i for i, _ in preddensity]
     logit = torch.stack(logit, dim=0)
