@@ -22,7 +22,7 @@ for name in l:
 
 sizes = numpy.asarray(sizes)
 sizes = numpy.sqrt(sizes)
-print(numpy.mean(sizes), numpy.var(sizes), numpy.max(sizes))
+print(numpy.mean(sizes), numpy.var(sizes),numpy.min(sizes), numpy.max(sizes))
 print(numpy.median(sizes))
 print(sizes.shape)
 sizes = sizes[sizes>numpy.median(sizes)]
