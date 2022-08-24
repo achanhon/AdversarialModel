@@ -7,8 +7,8 @@ import torchvision
 
 def smooth(vect):
     return torch.nn.functional.avg_pool1d(
-        vect.unsqueeze(0), kernel_size=15, padding=7, stride=1
-    )[0]
+        vect.unsqueeze(0).unsqueeze(0), kernel_size=15, padding=7, stride=1
+    )[0][0]
 
 
 def normalize(positive_vect):
