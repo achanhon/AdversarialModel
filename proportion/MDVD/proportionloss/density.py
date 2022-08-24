@@ -17,27 +17,27 @@ def normalize(positive_vect):
 
 
 def logitTOdensity(logit, sizes):
-    sizes = torch.sqrt(sizes).int()
-    density = torch.zeros(200).cuda()
+    density = torch.zeros(200)
 
-    weight1 = torch.nn.functional.softmax(logit, dim=1) - 0.5
+    weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
     weigth2 = weigth2[:, 1] / (weigth2[:, 1] + weigth2[:, 0] + 0.01)
+    weigth2 = weigth2 + weight1
 
-    for i in range(sizes.shape[0]):
-        if weight1[i] > 0:
-            density[sizes[i]] = weight1[i] + weigth2[i] + density[sizes[i]]
+    I = [i for i in range(sizes.shape[0]) if weight1[i] > 0]
+    for i in I:
+        density[sizes[i]] = weigth2[i] + density[sizes[i]]
 
     return normalize(smooth(density))
 
 
-def labelsT0density(targets, sizes):
-    sizes = torch.sqrt(sizes).int()
-    density = torch.zeros(200).cuda()
 
-    for i in range(sizes.shape[0]):
-        if targets[i] == 1:
-            density[sizes[i]] = 1 + density[sizes[i]]
+def labelsT0density(targets, sizes):
+    density = torch.zeros(200)
+
+    I = [i for i in range(sizes.shape[0]) if targets[i] == 1]
+    for i in I:
+        density[sizes[i]] = 1 + density[sizes[i]]
 
     return normalize(smooth(density))
 
@@ -56,10 +56,13 @@ class MDVD(torch.utils.data.Dataset):
         self.flag = flag
         self.root = "../selectivesearch/build/MDVD/" + flag
         if flag == "test":
-            tmp = [torchvision.transforms.Resize(32), torchvision.transforms.ToTensor()]
+            tmp = [
+                torchvision.transforms.Resize((32, 32)),
+                torchvision.transforms.ToTensor(),
+            ]
         else:
             tmp = [
-                torchvision.transforms.RandomResizedCrop(32),
+                torchvision.transforms.Resize((32, 32)),
                 torchvision.transforms.RandomRotation(90),
                 torchvision.transforms.RandomHorizontalFlip(0.5),
                 torchvision.transforms.RandomVerticalFlip(0.5),

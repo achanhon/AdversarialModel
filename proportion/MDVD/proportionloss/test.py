@@ -22,7 +22,7 @@ if len(sys.argv) > 2:
     inputs = torch.Tensor(inputs)
     mean = inputs.mean()
     var = inputs.var()
-    meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")"
+    meanvar = str(mean.cpu().numpy()) + "  (\pm " + str(var.cpu().numpy()) + ")\n"
     with open(outputpath, "w") as f:
         f.write(meanvar)
     f.close()
@@ -32,7 +32,7 @@ if len(sys.argv) > 2:
 
 print("load data")
 Bs = 256
-testset = density.EurosatSplit("test")
+testset = density.MDVD("test")
 testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=True)
 
 print("load model")
@@ -42,16 +42,15 @@ net.eval()
 
 with torch.no_grad():
     print("classical test")
-    cm = torch.zeros(10, 10).cuda()
-    for inputs, targets in testloader:
+    cm = torch.zeros(2, 2).cuda()
+    for inputs, targets, _ in testloader:
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
         _, predicted = outputs.max(1)
 
-        for i in range(10):
-            for j in range(10):
-                cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
+        for i, j in [(0, 0), (0, 1), (1, 0), (1, 1)]:
+            cm[i][j] += torch.sum((targets == i).float() * (predicted == j).float())
 
     total = torch.sum(cm)
     accuracy = torch.sum(torch.diagonal(cm)) / total
@@ -59,18 +58,20 @@ with torch.no_grad():
     print("test accuracy=", accuracy)
 
     print("proportion test")
-    averageKL = torch.zeros(2).cuda()
+    total, averageKL = 0, 0
     for epoch in range(10):
-        for inputs, targets in testloader:
-            inputs, targets = inputs.cuda(), targets.cuda()
+        for inputs, targets, sizes in testloader:
+            sizes = torch.sqrt(sizes).int()
+            truedensity = density.labelsT0density(targets, sizes)
 
-            outputs = net(inputs)
+            inputs = inputs.cuda()
+            outputs = net(inputs).cpu()
 
-            estimatedensity = density.logitTOdensity(outputs)
-            truedensity = density.labelsTOdensity(targets)
-            averageKL[0] += density.extendedKL(estimatedensity, truedensity)
-            averageKL[1] += 1
+            estimatedensity = density.logitTOdensity(outputs, sizes)
 
-    averageKL = averageKL[0] / averageKL[1]
+            averageKL = density.extendedKL(estimatedensity, truedensity) + averageKL
+            total += 1
+
+    averageKL = averageKL / total
     torch.save(averageKL, "build/" + sys.argv[1])
     print("test divergence=", averageKL)
