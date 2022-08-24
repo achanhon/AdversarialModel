@@ -62,7 +62,7 @@ for epoch in range(nbepoch):
         primaryloss = criterion(outputs, targets)
 
         estimatedensity = density.logitTOdensity(outputs.cpu(), sizes)
-        truedensity = density.labelsTOdensity(targets.cpu(), sizes)
+        truedensity = density.labelsT0density(targets.cpu(), sizes)
         secondaryloss = density.extendedKL(estimatedensity, truedensity)
 
         loss = primaryloss + secondaryloss
