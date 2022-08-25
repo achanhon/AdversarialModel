@@ -59,13 +59,14 @@ for epoch in range(nbepoch):
         inputs, targets = inputs.cuda(), targets.cuda()
 
         outputs = net(inputs)
-        primaryloss = criterion(outputs, targets)
+        loss = criterion(outputs, targets)
 
-        estimatedensity = density.logitTOdensity(outputs.cpu(), sizes)
-        truedensity = density.labelsT0density(targets.cpu(), sizes)
-        secondaryloss = density.extendedKL(estimatedensity, truedensity)
+        if epoch > 0:
+            estimatedensity = density.logitTOdensity(outputs.cpu(), sizes)
+            truedensity = density.labelsT0density(targets.cpu(), sizes)
+            secondaryloss = density.extendedKL(estimatedensity, truedensity)
 
-        loss = primaryloss + secondaryloss
+            loss = loss + secondaryloss
         printloss[0] += loss.detach()
         printloss[1] += Bs
 
