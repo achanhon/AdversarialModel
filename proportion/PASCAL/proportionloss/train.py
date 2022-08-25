@@ -74,7 +74,7 @@ for epoch in range(nbepoch):
 
         optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
+        torch.nn.utils.clip_grad_norm_(net.parameters(), 2)
         optimizer.step()
 
         _, predicted = outputs.max(1)
