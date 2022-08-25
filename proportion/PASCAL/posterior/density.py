@@ -17,7 +17,7 @@ def normalize(positive_vect):
 
 
 def logitTOdensity(logit, sizes):
-    density = torch.zeros(450)
+    density = torch.ones(450) * 0.0001
 
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
@@ -32,7 +32,7 @@ def logitTOdensity(logit, sizes):
 
 
 def selectivelogitTOdensity(logit, sizes):
-    density = torch.zeros(450)
+    density = torch.ones(450) * 0.0001
 
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)

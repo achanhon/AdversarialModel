@@ -32,7 +32,7 @@ def logitTOdensity(logit, sizes):
 
 
 def labelsT0density(targets, sizes):
-    density = torch.ones(450) * 0.0001
+    density = torch.zeros(450)
 
     I = [i for i in range(sizes.shape[0]) if targets[i] == 1]
     for i in I:
