@@ -7,7 +7,7 @@ import torchvision
 
 def smooth(vect):
     return torch.nn.functional.avg_pool1d(
-        vect.unsqueeze(0).unsqueeze(0), kernel_size=15, padding=7, stride=1
+        vect.unsqueeze(0).unsqueeze(0), kernel_size=31, padding=15, stride=1
     )[0][0]
 
 
@@ -17,7 +17,7 @@ def normalize(positive_vect):
 
 
 def logitTOdensity(logit, sizes):
-    density = torch.ones(200) * 0.0001
+    density = torch.ones(450) * 0.0001
 
     weight1 = torch.nn.functional.softmax(logit, dim=1)[:, 1] - 0.5
     weigth2 = torch.nn.functional.relu(logit)
@@ -32,7 +32,7 @@ def logitTOdensity(logit, sizes):
 
 
 def labelsT0density(targets, sizes):
-    density = torch.zeros(200)
+    density = torch.zeros(450)
 
     I = [i for i in range(sizes.shape[0]) if targets[i] == 1]
     for i in I:
@@ -49,24 +49,16 @@ def extendedKL(estimatedensity, truedensity):
     return kl + torch.sum(diff * diff) + diff.abs().sum()
 
 
-class MDVD(torch.utils.data.Dataset):
+class PASCAL(torch.utils.data.Dataset):
     def __init__(self, flag):
         assert flag in ["train", "test"]
         self.flag = flag
-        self.root = "../selectivesearch/build/MDVD/" + flag
-        if flag == "test":
-            tmp = [
-                torchvision.transforms.Resize((32, 32)),
-                torchvision.transforms.ToTensor(),
-            ]
-        else:
-            tmp = [
-                torchvision.transforms.Resize((32, 32)),
-                torchvision.transforms.RandomRotation(90),
-                torchvision.transforms.RandomHorizontalFlip(0.5),
-                torchvision.transforms.RandomVerticalFlip(0.5),
-                torchvision.transforms.ToTensor(),
-            ]
+        self.root = "../selectivesearch/build/PASCAL/" + flag
+        tmp = [
+            torchvision.transforms.Resize((32, 32)),
+            torchvision.transforms.ToTensor(),
+        ]
+
         self.aug = torchvision.transforms.Compose(tmp)
 
         self.sizeP = len(os.listdir(self.root + "/good"))
@@ -85,6 +77,6 @@ class MDVD(torch.utils.data.Dataset):
         image = PIL.Image.open(path).convert("RGB").copy()
 
         size = image.size[0] * image.size[0] + image.size[1] * image.size[1]
-        if size >= 200 * 200:
-            size = 200 * 200 - 1
+        if size >= 450 * 450:
+            size = 450 * 450 - 1
         return self.aug(image), label, size
