@@ -31,8 +31,8 @@ for rect in rects:
     x, y, w, h = rect
     cv2.rectangle(imOut, (x, y), (x + w, y + h), (0, 255, 0), 1, cv2.LINE_AA)
 
-cv2.imwrite("build/withbox.png",imOut)
-cv2.imshow("Output", imOut)
-q = cv2.waitKey(0)
-print(q)
-cv2.destroyAllWindows()
+cv2.imwrite("build/withbox.png", imOut)
+# cv2.imshow("Output", imOut)
+# q = cv2.waitKey(0)
+# print(q)
+# cv2.destroyAllWindows()
