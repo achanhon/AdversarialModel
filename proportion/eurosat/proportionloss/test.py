@@ -33,6 +33,7 @@ if len(sys.argv) > 2:
 print("load data")
 #Bs = 256
 Bs = 128 ### experiments requested by reviewers
+Bs = 512 ### experiments requested by reviewers
 testset = density.EurosatSplit("test")
 testloader = torch.utils.data.DataLoader(testset, batch_size=Bs, shuffle=True)
 
